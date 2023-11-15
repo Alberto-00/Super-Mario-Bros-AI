@@ -1,5 +1,3 @@
-__author__ = 'justinarmstrong'
-
 import pygame as pg
 from .. import constants as c
 
@@ -15,7 +13,3 @@ class Checkpoint(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.name = name
-
-
-
-

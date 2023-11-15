@@ -1,5 +1,3 @@
-__author__ = 'justinarmstrong'
-
 import pygame as pg
 from .. import setup
 from .. import constants as c
@@ -7,6 +5,7 @@ from .. import constants as c
 
 class Flag(pg.sprite.Sprite):
     """Flag on the castle"""
+
     def __init__(self, x, y):
         """Initialize object"""
         super(Flag, self).__init__()
@@ -19,7 +18,6 @@ class Flag(pg.sprite.Sprite):
         self.y_vel = -2
         self.target_height = y
 
-
     def get_image(self, x, y, width, height):
         """Extracts image from sprite sheet"""
         image = pg.Surface([width, height])
@@ -28,8 +26,8 @@ class Flag(pg.sprite.Sprite):
         image.blit(self.sprite_sheet, (0, 0), (x, y, width, height))
         image.set_colorkey(c.BLACK)
         image = pg.transform.scale(image,
-                                   (int(rect.width*c.SIZE_MULTIPLIER),
-                                    int(rect.height*c.SIZE_MULTIPLIER)))
+                                   (int(rect.width * c.SIZE_MULTIPLIER),
+                                    int(rect.height * c.SIZE_MULTIPLIER)))
         return image
 
     def update(self, *args):
