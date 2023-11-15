@@ -1,5 +1,3 @@
-__author__ = 'justinarmstrong'
-
 import pygame as pg
 from .. import constants as c
 from .. import setup

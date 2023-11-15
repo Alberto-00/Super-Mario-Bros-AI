@@ -86,13 +86,10 @@ class OverheadInfo(object):
         image_list.append(self.get_image(68, 249, 6, 2))
         image_list.append(self.get_image(75, 247, 6, 6))
 
-
-
         character_string = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ -*'
 
         for character, image in zip(character_string, image_list):
             self.image_dict[character] = image
-
 
     def get_image(self, x, y, width, height):
         """Extracts image from sprite sheet"""
@@ -106,12 +103,10 @@ class OverheadInfo(object):
                                     int(rect.height*2.9)))
         return image
 
-
     def create_score_group(self):
         """Creates the initial empty score (000000)"""
         self.score_images = []
         self.create_label(self.score_images, '000000', 75, 55)
-
 
     def create_info_labels(self):
         """Creates the labels that describe each info"""
@@ -119,7 +114,6 @@ class OverheadInfo(object):
         self.world_label = []
         self.time_label = []
         self.stage_label = []
-
 
         self.create_label(self.mario_label, 'MARIO', 75, 30)
         self.create_label(self.world_label, 'WORLD', 450, 30)
@@ -131,7 +125,6 @@ class OverheadInfo(object):
                            self.time_label,
                            self.stage_label]
 
-
     def create_load_screen_labels(self):
         """Creates labels for the center info of a load screen"""
         world_label = []
@@ -142,12 +135,10 @@ class OverheadInfo(object):
 
         self.center_labels = [world_label, number_label]
 
-
     def create_countdown_clock(self):
         """Creates the count down clock for the level"""
         self.count_down_images = []
         self.create_label(self.count_down_images, str(self.time), 645, 55)
-
 
     def create_label(self, label_list, string, x, y):
         """Creates a label (WORLD, TIME, MARIO)"""
@@ -155,7 +146,6 @@ class OverheadInfo(object):
             label_list.append(Character(self.image_dict[letter]))
 
         self.set_label_rects(label_list, x, y)
-
 
     def set_label_rects(self, label_list, x, y):
         """Set the location of each individual character"""
@@ -166,17 +156,14 @@ class OverheadInfo(object):
                 letter.rect.y += 7
                 letter.rect.x += 2
 
-
     def create_coin_counter(self):
         """Creates the info that tracks the number of coins Mario collects"""
         self.coin_count_images = []
         self.create_label(self.coin_count_images, '*00', 300, 55)
 
-
     def create_flashing_coin(self):
         """Creates the flashing coin next to the coin total"""
         self.flashing_coin = flashing_coin.Coin(280, 53)
-
 
     def create_mario_image(self):
         """Get the mario image"""
@@ -189,7 +176,6 @@ class OverheadInfo(object):
         self.sprite_sheet = setup.GFX['mario_bros']
         self.mario_image = self.get_image(178, 32, 12, 16)
         self.mario_rect = self.mario_image.get_rect(center=(320, 290))
-
 
     def create_game_over_label(self):
         """Create the label for the GAME OVER screen"""
@@ -207,7 +193,6 @@ class OverheadInfo(object):
 
         self.create_label(time_out_label, 'TIME OUT', 290, 310)
         self.time_out_label = [time_out_label]
-
 
     def create_main_menu_labels(self):
         """Create labels for the MAIN MENU screen"""
