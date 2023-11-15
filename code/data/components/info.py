@@ -6,6 +6,7 @@ from . import flashing_coin
 
 class Character(pg.sprite.Sprite):
     """Parent class for all characters used for the overhead level info"""
+
     def __init__(self, image):
         super(Character, self).__init__()
         self.image = image
@@ -15,6 +16,7 @@ class Character(pg.sprite.Sprite):
 class OverheadInfo(object):
     """Class for level information like score, coin total,
         and time remaining"""
+
     def __init__(self, game_info, state):
         self.sprite_sheet = setup.GFX['text_images']
         self.coin_total = game_info[c.COIN_TOTAL]
@@ -37,7 +39,6 @@ class OverheadInfo(object):
         self.create_game_over_label()
         self.create_time_out_label()
         self.create_main_menu_labels()
-
 
     def create_image_dict(self):
         """Creates the initial images for the score"""
@@ -99,8 +100,8 @@ class OverheadInfo(object):
         image.blit(self.sprite_sheet, (0, 0), (x, y, width, height))
         image.set_colorkey((92, 148, 252))
         image = pg.transform.scale(image,
-                                   (int(rect.width*2.9),
-                                    int(rect.height*2.9)))
+                                   (int(rect.width * 2.9),
+                                    int(rect.height * 2.9)))
         return image
 
     def create_score_group(self):
@@ -373,7 +374,7 @@ class OverheadInfo(object):
             surface.blit(info.image, info.rect)
 
         for digit in self.count_down_images:
-                surface.blit(digit.image, digit.rect)
+            surface.blit(digit.image, digit.rect)
 
         for character in self.coin_count_images:
             surface.blit(character.image, character.rect)
