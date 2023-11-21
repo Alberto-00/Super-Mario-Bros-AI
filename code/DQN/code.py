@@ -6,7 +6,7 @@ import gym_super_mario_bros
 from nes_py.wrappers import JoypadSpace
 from tqdm import tqdm
 import pickle
-from gym_super_mario_bros.actions import RIGHT_ONLY
+from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 import gym
 import collections
 import cv2
@@ -169,8 +169,12 @@ class Q_Agent():
         self.state_a_dict = {}
         self.exploreP = 1
         self.obs_vec = []
-        self.gamma = 0.99
-        self.alpha = 0.01
+        self.gamma = 0.90 # si può modificare
+        self.alpha = 0.01 # si può modificare
+        self.explore_decay = 0.99 # si può modificare
+        self.explore_min = 0.02 # si può modificare
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
     """
     obs_to_state(self, obs): Questo metodo converte un'osservazione in uno stato.
@@ -207,15 +211,22 @@ class Q_Agent():
     """
 
     def take_action(self, state):
-        Q_a = self.get_Qval(state)
-        if (np.random.rand() > self.exploreP):
-            """ exploitation"""
-            action = np.argmax(Q_a)
-        else:
-            """ exploration"""
+        if np.random.rand() < self.exploreP:
+            # Exploration: choose a random action
             action = env.action_space.sample()
+        else:
+            # Exploitation: choose action with the highest Q-value
+            q_values = self.state_a_dict[state]
+            max_q_value = np.max(q_values)
 
-        self.exploreP *= 0.99
+            # Add some randomness to the selection among the best actions
+            best_actions = [a for a, q in enumerate(q_values) if q == max_q_value]
+            action = np.random.choice(best_actions)
+
+        # Decay exploration probability
+        self.exploreP *= self.explore_decay
+        self.exploreP = max(self.exploreP, self.explore_min)
+
         return action
 
     """
@@ -225,7 +236,7 @@ class Q_Agent():
 
     def get_Qval(self, state):
         if (state not in self.state_a_dict):
-            self.state_a_dict[state] = np.random.rand(5, 1)
+            self.state_a_dict[state] = np.random.rand(7, 1)
         return self.state_a_dict[state]
 
     """
@@ -245,13 +256,33 @@ class Q_Agent():
         self.state_a_dict[state][action] += self.alpha * td_error
 
 
+def custom_reward(observation, reward, done):
+    # premia l'agente quando raggiunge il traguardo
+    if done and reward == 0:
+        reward = 1000  # Ricompensa significativa quando l'agente raggiunge il traguardo
+
+        # Esempio: penalizza l'agente per collisioni
+    if 'collision' in observation and observation['collision']:
+        reward -= 10  # Penalità per le collisioni
+
+        # Esempio: premia l'agente per eliminare nemici
+    if 'enemy_eliminated' in observation and observation['enemy_eliminated']:
+        reward += 20  # Ricompensa per eliminare un nemico
+
+        # Esempio: premia l'agente per raccogliere un power-up
+    if 'power_up_collected' in observation and observation['power_up_collected']:
+        reward += 50  # Ricompensa per raccogliere un power-up
+
+    return reward
+
+
 def make_env(env):
     env = MaxAndSkipEnv(env)
     env = ProcessFrame84(env)
     env = ImageToPyTorch(env)
     env = BufferWrapper(env, 4)
     env = ScaledFloatFrame(env)
-    return JoypadSpace(env, RIGHT_ONLY)
+    return JoypadSpace(env, SIMPLE_MOVEMENT)
 
 
 def init_pygame():
@@ -271,16 +302,21 @@ def show_state(env, ep=0, info=""):
     pygame.time.delay(50)  # Aggiungi un ritardo per rallentare la visualizzazione
 
 
-def agent_training(num_episodes):
+def agent_training(num_episodes, reward_function):
     rewards = []
 
+    init_pygame()
     for i_episode in range(num_episodes):
         obs = env.reset()
         state = Mario.obs_to_state(obs)
         episode_reward = 0
         while True:
+            show_state(env, i_episode)
             action = Mario.take_action(state)
             next_obs, reward, terminal, _ = env.step(action)
+
+            # Utilizza la funzione di ricompensa personalizzata
+            reward = reward_function(observation=next_obs, reward=reward, done=terminal)
             episode_reward += reward
 
             next_state = Mario.obs_to_state(next_obs)
@@ -296,6 +332,7 @@ def agent_training(num_episodes):
         # Saving the reward array every 10 episodes
         if i_episode % 10 == 0:
             np.save('rewards.npy', rewards)
+    pygame.quit()
 
 
 def agent_testing(num_episodes):
@@ -352,7 +389,7 @@ if __name__ == "__main__":
     else:
         # Crea un nuovo agente non addestrato
         Mario = Q_Agent()
-        agent_training(num_episodes=10)
+        agent_training(num_episodes=10, reward_function=custom_reward)
 
         with open('trained_q_values.pkl', 'wb') as f:
             pickle.dump(Mario.state_a_dict, f)
@@ -366,29 +403,3 @@ if __name__ == "__main__":
     plt.show()
 
 
-
-'''def agent_testing(num_test_episodes):
-    # Imposta l'esplorazione a zero per la fase di test
-    Mario.exploreP = 0
-
-    init_pygame()
-    for i_episode in range(num_test_episodes):
-        obs = env.reset()
-        state = Mario.obs_to_state(obs)
-        episode_reward = 0
-
-        while True:
-            show_state(env, i_episode)
-            action = np.argmax(Mario.get_Qval(state))  # Usa sempre l'azione con il massimo valore Q
-            next_obs, reward, terminal, _ = env.step(action)
-            episode_reward += reward
-
-            next_state = Mario.obs_to_state(next_obs)
-
-            state = next_state
-
-            if terminal:
-                break
-
-        print("Total reward after test episode {} is {}".format(i_episode + 1, episode_reward))
-    pygame.quit()'''
