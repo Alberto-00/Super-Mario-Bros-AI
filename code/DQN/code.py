@@ -174,9 +174,9 @@ class Q_Agent():
 
     """
     obs_to_state(self, obs): Questo metodo converte un'osservazione in uno stato.
-     Se l'osservazione è già presente in obs_vec, 
-     restituisce l'indice corrispondente. 
-     Altrimenti, aggiunge l'osservazione a obs_vec e restituisce il nuovo indice.
+    Se l'osservazione è già presente in obs_vec, 
+    restituisce l'indice corrispondente. 
+    Altrimenti, aggiunge l'osservazione a obs_vec e restituisce il nuovo indice.
     """
 
     def obs_to_state(self, obs):
@@ -298,7 +298,76 @@ def agent_training(num_episodes):
             np.save('rewards.npy', rewards)
 
 
-def agent_testing(num_test_episodes):
+def agent_testing(num_episodes):
+    total_rewards = []
+
+    init_pygame()
+    for i_episode in range(num_episodes):
+        obs = env.reset()
+        state = Mario.obs_to_state(obs)
+        episode_reward = 0
+
+        while True:
+            # Sfrutta il modello addestrato senza esplorazione
+            # perché l'obiettivo è valutare le prestazioni
+            # del modello addestrato, non esplorare nuove azioni.
+            show_state(env, i_episode)
+
+            action = np.argmax(Mario.get_Qval(state))
+            next_obs, reward, terminal, _ = env.step(action)
+            episode_reward += reward
+
+            next_state = Mario.obs_to_state(next_obs)
+            state = next_state
+
+            if terminal:
+                break
+
+        total_rewards.append(episode_reward)
+        print(f"Total reward after testing episode {i_episode + 1} is {episode_reward}")
+
+    pygame.quit()
+    average_reward = np.mean(total_rewards)
+    print(f"Average reward over {num_episodes} testing episodes: {average_reward}")
+
+
+if __name__ == "__main__":
+    env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
+    env = make_env(env)  # Wraps the environment so that frames are grayscale
+    obs = env.reset()
+
+    env.observation_space
+    env.action_space
+
+    # Imposta a True se vuoi utilizzare un agente già addestrato
+    use_trained_agent = False
+
+    if use_trained_agent:
+        # Carica i valori Q appresi durante l'addestramento
+        with open('trained_q_values.pkl', 'rb') as f:
+            trained_q_values = pickle.load(f)
+
+        Mario = Q_Agent()
+        Mario.state_a_dict = trained_q_values
+    else:
+        # Crea un nuovo agente non addestrato
+        Mario = Q_Agent()
+        agent_training(num_episodes=10)
+
+        with open('trained_q_values.pkl', 'wb') as f:
+            pickle.dump(Mario.state_a_dict, f)
+
+    agent_testing(num_episodes=10)
+
+    # Plotting graph
+    rewards = np.load('rewards.npy')
+    plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
+    plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
+    plt.show()
+
+
+
+'''def agent_testing(num_test_episodes):
     # Imposta l'esplorazione a zero per la fase di test
     Mario.exploreP = 0
 
@@ -322,23 +391,4 @@ def agent_testing(num_test_episodes):
                 break
 
         print("Total reward after test episode {} is {}".format(i_episode + 1, episode_reward))
-    pygame.quit()
-
-
-if __name__ == "__main__":
-    env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
-    env = make_env(env)  # Wraps the environment so that frames are grayscale
-    obs = env.reset()
-
-    env.observation_space
-    env.action_space
-
-    Mario = Q_Agent()
-    agent_training(num_episodes=10)
-    agent_testing(num_test_episodes=10)
-
-    # Plotting graph
-    rewards = np.load('rewards.npy')
-    plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
-    plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
-    plt.show()
+    pygame.quit()'''
