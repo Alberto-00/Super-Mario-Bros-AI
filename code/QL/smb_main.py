@@ -4,7 +4,7 @@ import pygame
 import gym_super_mario_bros
 from nes_py.wrappers import JoypadSpace
 import pickle
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 import matplotlib.pyplot as plt
 
 from QL.enviroment import *
@@ -12,14 +12,14 @@ from QL.MarioQLAgent import MarioQLAgent
 
 
 CUSTOM_REWARDS = {
-    "time": -1.0,  # per second that passes by
+    "time": -0.1,  # per second that passes by
     "death": -100.,  # mario dies
-    "extra_life": 150.,  # mario gets an extra life, which includes getting 100th coin
-    "mushroom": 60.,  # mario eats a mushroom to become big
-    "flower": 65.,  # mario eats a flower
-    "mushroom_hit": -30.,  # mario gets hit while big
-    "flower_hit": -35.,  # mario gets hit while fire mario
-    "coin": 100.0,  # mario gets a coin
+    "extra_life": 100.,  # mario gets an extra life, which includes getting 100th coin
+    "mushroom": 20.,  # mario eats a mushroom to become big
+    "flower": 25.,  # mario eats a flower
+    "mushroom_hit": -10.,  # mario gets hit while big
+    "flower_hit": -15.,  # mario gets hit while fire mario
+    "coin": 50.0,  # mario gets a coin
     "victory": 1000  # mario win
 }
 
@@ -72,22 +72,24 @@ def custom_rewards(name, tmp_info):
         # 0 - small mario. only achieved if hit while super mario or fire mario. if hit while small mario, death.
 
         # if small value was sent, you got hit when you were big
-        if tmp_info['status'] == 'big' and name['status'] == 'small':
+        if tmp_info['status'] == 'tall' and name['status'] == 'small':
+            print('hit fungo')
             reward += CUSTOM_REWARDS['mushroom_hit']
 
         # or worse, you got hit when you were a flower
-        elif tmp_info['status'] == 'shoot fireballs' and name['status'] == 'big':
+        elif tmp_info['status'] == 'fireball' and name['status'] == 'tall':
+            print('print fireball')
             reward += CUSTOM_REWARDS['flower_hit']
 
         # ate a flower (assuming was still super mario. if eating flower while small mario, mario only becomes super
         # mario so this value would be a value of 1, and be caught in the value == 1 checks)
-        elif name['status'] == 'shoot fireballs':
+        elif name['status'] == 'fireball':
             print('fireball')
             reward += CUSTOM_REWARDS['flower']
 
         # if currently super mario, only need to check if this is from eating mushroom. if hit while fire mario,
         # goes back to small mario
-        elif name['status'] == 'big':
+        elif name['status'] == 'tall':
             print('fungo')
             reward += CUSTOM_REWARDS['mushroom']
 
@@ -100,7 +102,7 @@ def make_env(enviroment):
     enviroment = ImageToPyTorch(enviroment)
     enviroment = BufferWrapper(enviroment, 4)
     enviroment = ScaledFloatFrame(enviroment)
-    return JoypadSpace(enviroment, SIMPLE_MOVEMENT)
+    return JoypadSpace(enviroment, COMPLEX_MOVEMENT)
 
 
 def init_pygame():
@@ -147,9 +149,9 @@ def agent_training(num_episodes, total_rewards):
 
         # Saving the reward array and agent every 10 episodes
         if (i_episode + 1) % 10 == 0:
-            np.save(os.path.abspath("QL/model_2/rewards.npy"), np.array(total_rewards))
+            np.save(os.path.abspath("QL/model_3/rewards.npy"), np.array(total_rewards))
 
-            with open(os.path.abspath("QL/model_2/trained_q_values.pkl"), 'wb') as file:
+            with open(os.path.abspath("QL/model_3/trained_q_values.pkl"), 'wb') as file:
                 pickle.dump(Mario.state_a_dict, file)
 
             print("Model and rewards are saved.\n")
@@ -203,10 +205,10 @@ if __name__ == "__main__":
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("QL/model_2/trained_q_values.pkl"), 'rb') as f:
+        with open(os.path.abspath("QL/model_3/trained_q_values.pkl"), 'rb') as f:
             trained_q_values = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("QL/model_2/rewards.npy"))
+        rewards = np.load(os.path.abspath("QL/model_3/rewards.npy"))
         Mario.state_a_dict = trained_q_values
 
         if training:
@@ -220,7 +222,7 @@ if __name__ == "__main__":
         agent_testing(num_episodes=5)
 
     # Plotting graph
-    rewards = np.load(os.path.abspath("QL/model_2/rewards.npy"))
+    rewards = np.load(os.path.abspath("QL/model_3/rewards.npy"))
     plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
     plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
     plt.show()

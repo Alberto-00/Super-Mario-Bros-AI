@@ -12,6 +12,8 @@ CUSTOM_REWARDS = {
 
 episodi = 100
 
+SIMPLE_MOVEMENTS
+
 parametri modello = self.gamma = 0.99
                     self.alpha = 0.01
                     self.explore_decay = 0.99

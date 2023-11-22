@@ -80,7 +80,7 @@ class MarioQLAgent:
         Se lo stato non è presente in state_a_dict, inizializza casualmente i valori Q.
         """
         if state not in self.state_a_dict:
-            self.state_a_dict[state] = np.random.rand(7, 1)
+            self.state_a_dict[state] = np.random.rand(12, 1)
         return self.state_a_dict[state]
 
     def update_qval(self, action, state, reward, next_state, terminal):
