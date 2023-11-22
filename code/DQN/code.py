@@ -21,6 +21,18 @@ import matplotlib.pyplot as plt
  consentendo un'approssimazione più rapida dell'azione in situazioni in cui i frame consecutivi possono essere simili.
 """
 
+CUSTOM_REWARDS = {
+    "time": -0.1,  # per second that passes by
+    "death": -100.,  # mario dies
+    "extra_life": 100.,  # mario gets an extra life, which includes getting 100th coin
+    "mushroom": 20.,  # mario eats a mushroom to become big
+    "flower": 25.,  # mario eats a flower
+    "mushroom_hit": -10.,  # mario gets hit while big
+    "flower_hit": -15.,  # mario gets hit while fire mario
+    "coin": 1.0,  # mario gets a coin
+    "victory": 1000  # mario win
+}
+
 
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env=None, skip=4):
@@ -33,6 +45,7 @@ class MaxAndSkipEnv(gym.Wrapper):
     def step(self, action):
         total_reward = 0.0
         done = None
+        info = None
         for _ in range(self._skip):
             obs, reward, done, info = self.env.step(action)
             self._obs_buffer.append(obs)
@@ -169,12 +182,11 @@ class Q_Agent():
         self.state_a_dict = {}
         self.exploreP = 1
         self.obs_vec = []
-        self.gamma = 0.90 # si può modificare
-        self.alpha = 0.01 # si può modificare
-        self.explore_decay = 0.99 # si può modificare
-        self.explore_min = 0.02 # si può modificare
+        self.gamma = 0.99  # si può modificare
+        self.alpha = 0.01  # si può modificare
+        self.explore_decay = 0.99  # si può modificare
+        self.explore_min = 0.02  # si può modificare
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
     """
     obs_to_state(self, obs): Questo metodo converte un'osservazione in uno stato.
@@ -256,24 +268,56 @@ class Q_Agent():
         self.state_a_dict[state][action] += self.alpha * td_error
 
 
-def custom_reward(observation, reward, done):
-    # premia l'agente quando raggiunge il traguardo
-    if done and reward == 0:
-        reward = 1000  # Ricompensa significativa quando l'agente raggiunge il traguardo
+def custom_rewards(name, tmp_info):
+    reward = 0
 
-        # Esempio: penalizza l'agente per collisioni
-    if 'collision' in observation and observation['collision']:
-        reward -= 10  # Penalità per le collisioni
+    if tmp_info['time'] != name['time']:
+        print('time')
+        reward += CUSTOM_REWARDS['time']
 
-        # Esempio: premia l'agente per eliminare nemici
-    if 'enemy_eliminated' in observation and observation['enemy_eliminated']:
-        reward += 20  # Ricompensa per eliminare un nemico
+    # detect if finished
+    if tmp_info['flag_get'] != name['flag_get'] and name['flag_get']:
+        print('flag')
+        reward += CUSTOM_REWARDS['victory']
 
-        # Esempio: premia l'agente per raccogliere un power-up
-    if 'power_up_collected' in observation and observation['power_up_collected']:
-        reward += 50  # Ricompensa per raccogliere un power-up
+    # detect deaths
+    elif 'TimeLimit.truncated' in name:
+        print('morto')
+        reward += CUSTOM_REWARDS["death"]
 
-    return reward
+    # detect extra lives
+    elif tmp_info['life'] != name['life'] and name["life"] > 2:
+        print('extra-life')
+        reward += CUSTOM_REWARDS['extra_life']
+
+    # detect getting a coin
+    elif tmp_info['coins'] != name['coins']:
+        print("coin detected")
+        reward += CUSTOM_REWARDS['coin']
+
+        if name["coins"] > 6:
+            reward += 500
+
+    # detect if mario ate a mushroom, ate a flower, or got hit without dying
+    elif tmp_info['status'] != name['status']:
+        print('status')
+        # 2 - fire mario. only achieved if eating flower while super mario
+        # 1 - super mario. only achieved if eating mushroom while small mario
+        # 0 - small mario. only achieved if hit while super mario or fire mario. if hit while small mario, death.
+
+        # ate a flower (assuming was still super mario. if eating flower while small mario, mario only becomes super
+        # mario so this value would be a value of 1, and be caught in the value == 1 checks)
+        if name['status'] == 'shoot fireballs':
+            print('fireball')
+            reward += CUSTOM_REWARDS['flower']
+
+        # if currently super mario, only need to check if this is from eating mushroom. if hit while fire mario,
+        # goes back to small mario
+        elif name['status'] == 'big':
+            print('fungo')
+            reward += CUSTOM_REWARDS['mushroom']
+
+    return reward, name
 
 
 def make_env(env):
@@ -302,7 +346,7 @@ def show_state(env, ep=0, info=""):
     pygame.time.delay(50)  # Aggiungi un ritardo per rallentare la visualizzazione
 
 
-def agent_training(num_episodes, reward_function):
+def agent_training(num_episodes):
     rewards = []
 
     init_pygame()
@@ -310,15 +354,22 @@ def agent_training(num_episodes, reward_function):
         obs = env.reset()
         state = Mario.obs_to_state(obs)
         episode_reward = 0
+        tmp_info = {
+            'coins': 0, 'flag_get': False,
+            'life': 2, 'status': 'small',
+            'TimeLimit.truncated': True,
+            'time': 400
+        }
+
         while True:
             show_state(env, i_episode)
             action = Mario.take_action(state)
-            next_obs, reward, terminal, _ = env.step(action)
+            next_obs, reward, terminal, info = env.step(action)
 
             # Utilizza la funzione di ricompensa personalizzata
-            reward = reward_function(observation=next_obs, reward=reward, done=terminal)
-            episode_reward += reward
+            custom_reward, tmp_info = custom_rewards(info, tmp_info)
 
+            episode_reward = episode_reward + reward + custom_reward
             next_state = Mario.obs_to_state(next_obs)
 
             Mario.update_Qval(action, state, reward, next_state, terminal)
@@ -373,9 +424,6 @@ if __name__ == "__main__":
     env = make_env(env)  # Wraps the environment so that frames are grayscale
     obs = env.reset()
 
-    env.observation_space
-    env.action_space
-
     # Imposta a True se vuoi utilizzare un agente già addestrato
     use_trained_agent = False
 
@@ -389,7 +437,7 @@ if __name__ == "__main__":
     else:
         # Crea un nuovo agente non addestrato
         Mario = Q_Agent()
-        agent_training(num_episodes=10, reward_function=custom_reward)
+        agent_training(num_episodes=10)
 
         with open('trained_q_values.pkl', 'wb') as f:
             pickle.dump(Mario.state_a_dict, f)
@@ -401,5 +449,3 @@ if __name__ == "__main__":
     plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
     plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
     plt.show()
-
-
