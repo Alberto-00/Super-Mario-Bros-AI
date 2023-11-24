@@ -162,10 +162,10 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
             # Saving the reward array and agent every 10 episodes
             if i_episode % 10 == 0:
-                np.save(os.path.abspath("model_1/rewards.npy"), np.array(total_rewards))
+                np.save(os.path.abspath("model_1/rewards-sampleModel.npy"), np.array(total_rewards))
 
-                with open(os.path.abspath("model_1/agent_mario.pkl"), 'wb') as file:
-                    pickle.dump(mario_agent, file)
+                with open(os.path.abspath("model_1/agent_mario-sampleModel.pkl"), 'wb') as file:
+                    pickle.dump(mario_agent.state_a_dict, file)
 
                 print("\nModel and rewards are saved.\n")
 
@@ -184,7 +184,6 @@ def agent_testing(num_episodes, mario_agent, enviroment):
             # perché l'obiettivo è valutare le prestazioni
             # del modello addestrato, non esplorare nuove azioni.
             show_state(enviroment, i_episode)
-
             action = np.argmax(mario_agent.get_qval(state))
             next_obs, reward, terminal, _ = enviroment.step(action)
             episode_reward += reward
@@ -216,21 +215,20 @@ if __name__ == "__main__":
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("model_1/agent_mario.pkl"), 'rb') as f:
+        with open(os.path.abspath("model_1/agent_mario-sampleModel.pkl"), 'rb') as f:
             agent_mario = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("model_1/rewards.npy"))
-        Mario = agent_mario
+        rewards = np.load(os.path.abspath("model_1/rewards-sampleModel.npy"))
 
         if training:
-            agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=Mario, enviroment=env)
-        agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
+            agent_training(num_episodes=4950, total_rewards=rewards, mario_agent=agent_mario, enviroment=env)
+        agent_testing(num_episodes=5, mario_agent=agent_mario, enviroment=env)
 
     else:
         Mario = MarioQLAgent(env)
         if training:
             rewards = []
-            agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=Mario, enviroment=env)
+            agent_training(num_episodes=4950, total_rewards=rewards, mario_agent=Mario, enviroment=env)
         agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
 
     # Plotting graph
