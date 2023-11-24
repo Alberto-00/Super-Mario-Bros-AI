@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from QL.enviroment import *
 from QL.MarioQLAgent import MarioQLAgent
+from tqdm import tqdm
 
 
 CUSTOM_REWARDS = {
@@ -122,49 +123,51 @@ def init_pygame():
 
 
 def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
-    for i_episode in range(num_episodes):
-        observation = enviroment.reset()
-        state = mario_agent.obs_to_state(observation)
-        episode_reward = 0
-        tmp_info = {
-            'coins': 0, 'flag_get': False,
-            'life': 2, 'status': 'small',
-            'TimeLimit.truncated': True,
-            'x_pos': 40, 'score': 0,
-            'time': 400
-        }
+    with tqdm(total=num_episodes, desc="Training Episodes") as progress_bar:
+        for i_episode in range(num_episodes):
+            observation = enviroment.reset()
+            state = mario_agent.obs_to_state(observation)
+            episode_reward = 0
+            tmp_info = {
+                'coins': 0, 'flag_get': False,
+                'life': 2, 'status': 'small',
+                'TimeLimit.truncated': True,
+                'x_pos': 40, 'score': 0,
+                'time': 400
+            }
 
-        while True:
-            action = mario_agent.take_action(state)
-            next_obs, _, terminal, info = enviroment.step(action)
+            while True:
+                action = mario_agent.take_action(state)
+                next_obs, _, terminal, info = enviroment.step(action)
 
-            # Utilizza la funzione di ricompensa personalizzata
-            custom_reward, tmp_info = custom_rewards(info, tmp_info)
+                # Utilizza la funzione di ricompensa personalizzata
+                custom_reward, tmp_info = custom_rewards(info, tmp_info)
 
-            episode_reward += custom_reward
-            next_state = mario_agent.obs_to_state(next_obs)
+                episode_reward += custom_reward
+                next_state = mario_agent.obs_to_state(next_obs)
 
-            mario_agent.update_qval(action, state, custom_reward, next_state, terminal)
-            state = next_state
+                mario_agent.update_qval(action, state, custom_reward, next_state, terminal)
+                state = next_state
 
-            if terminal:
-                break
+                if terminal:
+                    break
 
-        if isinstance(total_rewards, np.ndarray):
-            total_rewards = np.append(total_rewards, episode_reward)
-        else:
-            total_rewards.append(episode_reward)
+            if isinstance(total_rewards, np.ndarray):
+                total_rewards = np.append(total_rewards, episode_reward)
+            else:
+                total_rewards.append(episode_reward)
 
-        print("Total reward after episode {} is {}".format(i_episode + 1, episode_reward))
+            progress_bar.update(1)
+            progress_bar.set_postfix({'Reward': episode_reward})
 
-        # Saving the reward array and agent every 10 episodes
-        if i_episode % 10 == 0:
-            np.save(os.path.abspath("QL/model_1/rewards.npy"), np.array(total_rewards))
+            # Saving the reward array and agent every 10 episodes
+            if i_episode % 10 == 0:
+                np.save(os.path.abspath("model_1/rewards.npy"), np.array(total_rewards))
 
-            with open(os.path.abspath("QL/model_1/agent_mario.pkl"), 'wb') as file:
-                pickle.dump(mario_agent, file)
+                with open(os.path.abspath("model_1/agent_mario.pkl"), 'wb') as file:
+                    pickle.dump(mario_agent, file)
 
-            print("Model and rewards are saved.\n")
+                print("\nModel and rewards are saved.\n")
 
 
 def agent_testing(num_episodes, mario_agent, enviroment):
@@ -209,14 +212,14 @@ if __name__ == "__main__":
     use_trained_agent = False
 
     # Imposta a True se vuoi effettuare la fase di training
-    training = False
+    training = True
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("QL/model_1/agent_mario.pkl"), 'rb') as f:
+        with open(os.path.abspath("model_1/agent_mario.pkl"), 'rb') as f:
             agent_mario = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("QL/model_1/rewards.npy"))
+        rewards = np.load(os.path.abspath("model_1/rewards.npy"))
         Mario = agent_mario
 
         if training:
@@ -231,7 +234,7 @@ if __name__ == "__main__":
         agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
 
     # Plotting graph
-    rewards = np.load(os.path.abspath("QL/model_1/rewards.npy"))
+    rewards = np.load(os.path.abspath("model_1/rewards.npy"))
     plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
     plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
     plt.show()
