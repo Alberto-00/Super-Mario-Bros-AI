@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 from QL.enviroment import *
 from QL.MarioQLAgent import MarioQLAgent
 
+from multiprocessing import Process, Manager
+from tqdm import tqdm
+
 
 CUSTOM_REWARDS = {
     "time": -0.1,  # per second that passes by
@@ -23,6 +26,7 @@ CUSTOM_REWARDS = {
     "score": 100.,  # mario gets a coin
     "victory": 1000  # mario win
 }
+
 
 
 def show_state(enviroment, ep=0, info=""):
@@ -111,7 +115,7 @@ def make_env(enviroment):
     enviroment = ImageToPyTorch(enviroment)
     enviroment = BufferWrapper(enviroment, 4)
     enviroment = ScaledFloatFrame(enviroment)
-    return JoypadSpace(enviroment, SIMPLE_MOVEMENT)
+    return JoypadSpace(enviroment, COMPLEX_MOVEMENT)
 
 
 def init_pygame():
@@ -121,8 +125,8 @@ def init_pygame():
     return screen
 
 
-def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
-    for i_episode in range(num_episodes):
+def worker(start, end, shared_rewards, lock, mario_agent, enviroment):
+    for i_episode in range(start, end):
         observation = enviroment.reset()
         state = mario_agent.obs_to_state(observation)
         episode_reward = 0
@@ -138,7 +142,6 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
             action = mario_agent.take_action(state)
             next_obs, _, terminal, info = enviroment.step(action)
 
-            # Utilizza la funzione di ricompensa personalizzata
             custom_reward, tmp_info = custom_rewards(info, tmp_info)
 
             episode_reward += custom_reward
@@ -150,21 +153,44 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
             if terminal:
                 break
 
-        if isinstance(total_rewards, np.ndarray):
-            total_rewards = np.append(total_rewards, episode_reward)
-        else:
-            total_rewards.append(episode_reward)
-
         print("Total reward after episode {} is {}".format(i_episode + 1, episode_reward))
 
-        # Saving the reward array and agent every 10 episodes
-        if i_episode % 10 == 0:
-            np.save(os.path.abspath("QL/model_1/rewards.npy"), np.array(total_rewards))
+        with lock:
+            shared_rewards.append(episode_reward)
 
-            with open(os.path.abspath("QL/model_1/agent_mario.pkl"), 'wb') as file:
-                pickle.dump(mario_agent, file)
 
-            print("Model and rewards are saved.\n")
+def parallel_agent_training(num_episodes, total_rewards, mario_agent, enviroment):
+    num_processes = 10  # Numero di processi paralleli
+
+    with Manager() as manager:
+        shared_rewards = manager.list()
+        lock = manager.Lock()
+
+        processes = []
+        episodes_per_process = num_episodes // num_processes
+
+        for i in range(num_processes):
+            start = i * episodes_per_process
+            end = (i + 1) * episodes_per_process if i < num_processes - 1 else num_episodes
+            p = Process(target=worker, args=(start, end, shared_rewards, lock, mario_agent, enviroment))
+            processes.append(p)
+
+        for p in processes:
+            p.start()
+
+        for p in processes:
+            p.join()
+
+        total_rewards.extend(shared_rewards)
+
+        # Salvataggio delle rewards ogni 10 episodi
+        np.save(os.path.abspath("QL/model_1/parallel_rewards.npy"), np.array(shared_rewards))
+
+        # Salvataggio del modello ogni 10 episodi
+        with open(os.path.abspath("QL/model_1/parallel_agent_mario.pkl"), 'wb') as file:
+            pickle.dump(Mario, file)
+
+    print("Training completed. Model and rewards are saved.\n")
 
 
 def agent_testing(num_episodes, mario_agent, enviroment):
@@ -209,29 +235,29 @@ if __name__ == "__main__":
     use_trained_agent = False
 
     # Imposta a True se vuoi effettuare la fase di training
-    training = False
+    training = True
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("QL/model_1/agent_mario.pkl"), 'rb') as f:
+        with open(os.path.abspath("QL/model_1/parallel_agent_mario.pkl"), 'rb') as f:
             agent_mario = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("QL/model_1/rewards.npy"))
+        rewards = np.load(os.path.abspath("QL/model_1/parallel_rewards.npy"))
         Mario = agent_mario
 
         if training:
-            agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=Mario, enviroment=env)
+            parallel_agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=Mario, enviroment=env)
         agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
 
     else:
         Mario = MarioQLAgent(env)
         if training:
             rewards = []
-            agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=Mario, enviroment=env)
+            parallel_agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=Mario, enviroment=env)
         agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
 
     # Plotting graph
-    rewards = np.load(os.path.abspath("QL/model_1/rewards.npy"))
+    rewards = np.load(os.path.abspath("QL/model_1/parallel_rewards.npy"))
     plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
     plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
     plt.show()
