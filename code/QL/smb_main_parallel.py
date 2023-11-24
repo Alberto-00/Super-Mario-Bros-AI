@@ -11,7 +11,6 @@ from QL.enviroment import *
 from QL.MarioQLAgent import MarioQLAgent
 
 from multiprocessing import Process, Manager
-from tqdm import tqdm
 
 
 CUSTOM_REWARDS = {
@@ -115,7 +114,7 @@ def make_env(enviroment):
     enviroment = ImageToPyTorch(enviroment)
     enviroment = BufferWrapper(enviroment, 4)
     enviroment = ScaledFloatFrame(enviroment)
-    return JoypadSpace(enviroment, COMPLEX_MOVEMENT)
+    return JoypadSpace(enviroment, SIMPLE_MOVEMENT)
 
 
 def init_pygame():
@@ -184,10 +183,10 @@ def parallel_agent_training(num_episodes, total_rewards, mario_agent, enviroment
         total_rewards.extend(shared_rewards)
 
         # Salvataggio delle rewards ogni 10 episodi
-        np.save(os.path.abspath("QL/model_1/parallel_rewards.npy"), np.array(shared_rewards))
+        np.save(os.path.abspath("model_1/parallel_rewards.npy"), np.array(shared_rewards))
 
         # Salvataggio del modello ogni 10 episodi
-        with open(os.path.abspath("QL/model_1/parallel_agent_mario.pkl"), 'wb') as file:
+        with open(os.path.abspath("model_1/parallel_agent_mario.pkl"), 'wb') as file:
             pickle.dump(Mario, file)
 
     print("Training completed. Model and rewards are saved.\n")
@@ -239,10 +238,10 @@ if __name__ == "__main__":
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("QL/model_1/parallel_agent_mario.pkl"), 'rb') as f:
+        with open(os.path.abspath("model_1/parallel_agent_mario.pkl"), 'rb') as f:
             agent_mario = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("QL/model_1/parallel_rewards.npy"))
+        rewards = np.load(os.path.abspath("model_1/parallel_rewards.npy"))
         Mario = agent_mario
 
         if training:
@@ -257,7 +256,7 @@ if __name__ == "__main__":
         agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
 
     # Plotting graph
-    rewards = np.load(os.path.abspath("QL/model_1/parallel_rewards.npy"))
+    rewards = np.load(os.path.abspath("model_1/parallel_rewards.npy"))
     plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
     plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
     plt.show()
