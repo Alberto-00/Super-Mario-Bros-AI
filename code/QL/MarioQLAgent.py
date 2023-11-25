@@ -83,6 +83,7 @@ class MarioQLAgent:
             self.state_a_dict[state] = np.random.rand(7, 1)
         return self.state_a_dict[state]
 
+
     def update_qval(self, action, state, reward, next_state, terminal):
         """
         Aggiorna i valori Q in base all'equazione di aggiornamento di Q-learning.
@@ -96,3 +97,51 @@ class MarioQLAgent:
 
         td_error = td_target - self.get_qval(state)[action]
         self.state_a_dict[state][action] += self.alpha * td_error
+
+    """def update_qval(self, action, state, reward, next_state, next_action, terminal):
+        if terminal:
+            td_target = reward
+        else:
+            td_target = reward + self.gamma * self.get_qval(next_state)[next_action]
+
+        td_error = td_target - self.get_qval(state)[action]
+        self.state_a_dict[state][action] += self.alpha * td_error"""
+
+
+
+
+
+
+    def take_action_sarsa(self, state, next_action):
+        """
+        Questo metodo seleziona un'azione in base all'algoritmo SARSA.
+        Se un valore casuale è maggiore di exploreP, l'agente esegue l'azione corrispondente al massimo valore Q.
+        Altrimenti, l'agente esegue un'azione casuale.
+        La probabilità di esplorazione exploreP diminuisce nel tempo.
+
+        La differenza rispetto a take_action è che prende in input anche l'azione successiva (next_action).
+        """
+        if next_action is not None:
+            return next_action
+
+        if np.random.rand() < self.exploreP:
+            # Exploration: choose a random action
+            action = self.env.action_space.sample()
+        else:
+            # Exploitation: choose action with the highest Q-value
+            if state in self.state_a_dict:
+                q_values = self.state_a_dict[state]
+                max_q_value = np.max(q_values)
+
+                # Add some randomness to the selection among the best actions
+                best_actions = [a for a, q in enumerate(q_values) if q == max_q_value]
+                action = np.random.choice(best_actions)
+            else:
+                # If the state is not in the dictionary, choose a random action
+                action = self.env.action_space.sample()
+
+        # Decay exploration probability
+        self.exploreP *= self.explore_decay
+        self.exploreP = max(self.exploreP, self.explore_min)
+
+        return action

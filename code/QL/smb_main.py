@@ -169,6 +169,59 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
                 print("\nModel and rewards are saved.\n")
 
+def agent_training_sarsa(num_episodes, total_rewards, mario_agent, enviroment):
+    with tqdm(total=num_episodes, desc="Training Episodes") as progress_bar:
+        for i_episode in range(num_episodes):
+            observation = enviroment.reset()
+            state = mario_agent.obs_to_state(observation)
+            episode_reward = 0
+            tmp_info = {
+                'coins': 0, 'flag_get': False,
+                'life': 2, 'status': 'small',
+                'TimeLimit.truncated': True,
+                'x_pos': 40, 'score': 0,
+                'time': 400
+            }
+
+            action = mario_agent.take_action_sarsa(state, next_action=None)
+
+            while True:
+                next_obs, _, terminal, info = enviroment.step(action)
+
+                # Utilizza la funzione di ricompensa personalizzata
+                custom_reward, tmp_info = custom_rewards(info, tmp_info)
+
+                episode_reward += custom_reward
+                next_state = mario_agent.obs_to_state(next_obs)
+
+                # Seleziona l'azione successiva usando SARSA
+                next_action = mario_agent.take_action_sarsa(next_state, next_action=None)
+
+                # Aggiorna i valori Q utilizzando SARSA
+                mario_agent.update_qval(action, state, custom_reward, next_state, next_action, terminal)
+
+                state = next_state
+                action = next_action
+
+                if terminal:
+                    break
+
+            if isinstance(total_rewards, np.ndarray):
+                total_rewards = np.append(total_rewards, episode_reward)
+            else:
+                total_rewards.append(episode_reward)
+
+            progress_bar.update(1)
+            progress_bar.set_postfix({'Reward': episode_reward})
+
+            # Saving the reward array and agent every 10 episodes
+            if i_episode % 10 == 0:
+                np.save(os.path.abspath("model_1/rewards-sampleModel.npy"), np.array(total_rewards))
+
+                with open(os.path.abspath("model_1/agent_mario-sampleModel.pkl"), 'wb') as file:
+                    pickle.dump(mario_agent.state_a_dict, file)
+
+                print("\nModel and rewards are saved.\n")
 
 def agent_testing(num_episodes, mario_agent, enviroment):
     total_rewards = []
@@ -221,6 +274,7 @@ if __name__ == "__main__":
         rewards = np.load(os.path.abspath("model_1/rewards-sampleModel.npy"))
 
         if training:
+            #agent_training_sarsa(num_episodes=4950, total_rewards=rewards, mario_agent=agent_mario, enviroment=env)
             agent_training(num_episodes=4950, total_rewards=rewards, mario_agent=agent_mario, enviroment=env)
         agent_testing(num_episodes=5, mario_agent=agent_mario, enviroment=env)
 
@@ -228,6 +282,7 @@ if __name__ == "__main__":
         Mario = MarioQLAgent(env)
         if training:
             rewards = []
+            #agent_training_sarsa(num_episodes=4950, total_rewards=rewards, mario_agent=Mario, enviroment=env)
             agent_training(num_episodes=4950, total_rewards=rewards, mario_agent=Mario, enviroment=env)
         agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
 
