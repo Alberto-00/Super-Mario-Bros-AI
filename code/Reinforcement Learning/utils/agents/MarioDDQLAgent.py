@@ -113,12 +113,12 @@ class DQNAgent:
     def batch_experiences(self):
         """Randomly sample 'batch size' experiences"""
         idx = random.choices(range(self.num_in_queue), k=self.memory_sample_size)
-        STATE = self.STATE_MEM[idx]
-        ACTION = self.ACTION_MEM[idx]
-        REWARD = self.REWARD_MEM[idx]
-        STATE2 = self.STATE2_MEM[idx]
-        DONE = self.DONE_MEM[idx]
-        return STATE, ACTION, REWARD, STATE2, DONE
+        state = self.STATE_MEM[idx]
+        action = self.ACTION_MEM[idx]
+        reward = self.REWARD_MEM[idx]
+        state2 = self.STATE2_MEM[idx]
+        done = self.DONE_MEM[idx]
+        return state, action, reward, state2, done
 
     def act(self, state):
         """Epsilon-greedy action"""
@@ -145,24 +145,24 @@ class DQNAgent:
             return
 
         # Sample a batch of experiences
-        STATE, ACTION, REWARD, STATE2, DONE = self.batch_experiences()
-        STATE = STATE.to(self.device)
-        ACTION = ACTION.to(self.device)
-        REWARD = REWARD.to(self.device)
-        STATE2 = STATE2.to(self.device)
-        DONE = DONE.to(self.device)
+        state, action, reward, state2, done = self.batch_experiences()
+        state = state.to(self.device)
+        action = action.to(self.device)
+        reward = reward.to(self.device)
+        state2 = state2.to(self.device)
+        done = done.to(self.device)
 
         self.optimizer.zero_grad()
         if self.double_dqn:
             # Double Q-Learning target is Q*(S, A) <- r + γ max_a Q_target(S', a)
-            target = REWARD + torch.mul((self.gamma * self.target_net(STATE2).max(1).values.unsqueeze(1)), 1 - DONE)
+            target = reward + torch.mul((self.gamma * self.target_net(state2).max(1).values.unsqueeze(1)), 1 - done)
 
-            current = self.local_net(STATE).gather(1, ACTION.long())  # Local net approximation of Q-value
+            current = self.local_net(state).gather(1, action.long())  # Local net approximation of Q-value
         else:
             # Q-Learning target is Q*(S, A) <- r + γ max_a Q(S', a)
-            target = REWARD + torch.mul((self.gamma * self.dqn(STATE2).max(1).values.unsqueeze(1)), 1 - DONE)
+            target = reward + torch.mul((self.gamma * self.dqn(state2).max(1).values.unsqueeze(1)), 1 - done)
 
-            current = self.dqn(STATE).gather(1, ACTION.long())
+            current = self.dqn(state).gather(1, action.long())
 
         loss = self.l1(current, target)
         loss.backward()  # Compute gradients
