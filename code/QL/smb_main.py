@@ -4,12 +4,13 @@ import pygame
 import gym_super_mario_bros
 from nes_py.wrappers import JoypadSpace
 import pickle
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+from gym_super_mario_bros.actions import RIGHT_ONLY
 import matplotlib.pyplot as plt
 
 from QL.enviroment import *
 from QL.MarioQLAgent import MarioQLAgent
 from tqdm import tqdm
+import time
 
 
 CUSTOM_REWARDS = {
@@ -20,8 +21,8 @@ CUSTOM_REWARDS = {
     "flower": 25.,  # mario eats a flower
     "mushroom_hit": -10.,  # mario gets hit while big
     "flower_hit": -15.,  # mario gets hit while fire mario
-    "coin": 50.0,  # mario gets a coin
-    "score": 100.,  # mario gets a coin
+    "coin": 15.,  # mario gets a coin
+    "score": 15.,  # mario hit enemies
     "victory": 1000  # mario win
 }
 
@@ -53,54 +54,45 @@ def custom_rewards(name, tmp_info):
 
     # detect if finished
     if tmp_info['flag_get'] != name['flag_get'] and name['flag_get']:
-        #print('flag')
         reward += CUSTOM_REWARDS['victory']
 
     # detect deaths
-    elif 'TimeLimit.truncated' in name:
-        #print('morto')
+    if 'TimeLimit.truncated' in name:
         reward += CUSTOM_REWARDS["death"]
 
     # detect extra lives
-    elif tmp_info['life'] != name['life'] and name["life"] > 2:
-        #print('extra-life')
+    if tmp_info['life'] != name['life'] and name["life"] > 2:
         reward += CUSTOM_REWARDS['extra_life']
 
     # detect getting a coin
-    elif tmp_info['coins'] != name['coins']:
-        #print("coin detected")
+    if tmp_info['coins'] != name['coins']:
         reward += CUSTOM_REWARDS['coin']
 
         if name["coins"] > 6:
             reward += 500
 
     # detect if mario ate a mushroom, ate a flower, or got hit without dying
-    elif tmp_info['status'] != name['status']:
-        #print('status')
+    if tmp_info['status'] != name['status']:
         # 2 - fire mario. only achieved if eating flower while super mario
         # 1 - super mario. only achieved if eating mushroom while small mario
         # 0 - small mario. only achieved if hit while super mario or fire mario. if hit while small mario, death.
 
         # if small value was sent, you got hit when you were big
         if tmp_info['status'] == 'tall' and name['status'] == 'small':
-            #print('hit fungo')
             reward += CUSTOM_REWARDS['mushroom_hit']
 
         # or worse, you got hit when you were a flower
         elif tmp_info['status'] == 'fireball' and name['status'] == 'tall':
-            #print('print fireball')
             reward += CUSTOM_REWARDS['flower_hit']
 
         # ate a flower (assuming was still super mario. if eating flower while small mario, mario only becomes super
         # mario so this value would be a value of 1, and be caught in the value == 1 checks)
         elif name['status'] == 'fireball':
-            #print('fireball')
             reward += CUSTOM_REWARDS['flower']
 
         # if currently super mario, only need to check if this is from eating mushroom. if hit while fire mario,
         # goes back to small mario
         elif name['status'] == 'tall':
-            #print('fungo')
             reward += CUSTOM_REWARDS['mushroom']
 
     return reward, name
@@ -112,7 +104,7 @@ def make_env(enviroment):
     enviroment = ImageToPyTorch(enviroment)
     enviroment = BufferWrapper(enviroment, 4)
     enviroment = ScaledFloatFrame(enviroment)
-    return JoypadSpace(enviroment, SIMPLE_MOVEMENT)
+    return JoypadSpace(enviroment, RIGHT_ONLY)
 
 
 def init_pygame():
@@ -136,14 +128,24 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
                 'time': 400
             }
 
+            start_time = time.time()
             while True:
                 action = mario_agent.take_action(state)
                 next_obs, _, terminal, info = enviroment.step(action)
+
+                if info["x_pos"] != tmp_info["x_pos"]:
+                    start_time = time.time()
 
                 # Utilizza la funzione di ricompensa personalizzata
                 custom_reward, tmp_info = custom_rewards(info, tmp_info)
 
                 episode_reward += custom_reward
+
+                end_time = time.time()
+                if end_time - start_time > 15:
+                    custom_reward -= CUSTOM_REWARDS["death"]
+                    terminal = True
+
                 next_state = mario_agent.obs_to_state(next_obs)
 
                 mario_agent.update_qval(action, state, custom_reward, next_state, terminal)
@@ -162,22 +164,28 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
             # Saving the reward array and agent every 10 episodes
             if i_episode % 10 == 0:
-                np.save(os.path.abspath("model_1/rewards-sampleModel.npy"), np.array(total_rewards))
+                np.save(os.path.abspath("model_1/rewards.npy"), np.array(total_rewards))
+                with open(os.path.abspath("model_1/model.pkl"), 'wb') as file:
+                    pickle.dump(agent_mario.state_a_dict, file)
 
-                with open(os.path.abspath("model_1/agent_mario-sampleModel.pkl"), 'wb') as file:
-                    pickle.dump(mario_agent.state_a_dict, file)
-
-                print("\nModel and rewards are saved.\n")
+                print("\nRewards and model are saved.\n")
 
 
 def agent_testing(num_episodes, mario_agent, enviroment):
     total_rewards = []
-
     init_pygame()
+
     for i_episode in range(num_episodes):
         observation = enviroment.reset()
         state = mario_agent.obs_to_state(observation)
         episode_reward = 0
+        tmp_info = {
+            'coins': 0, 'flag_get': False,
+            'life': 2, 'status': 'small',
+            'TimeLimit.truncated': True,
+            'x_pos': 40, 'score': 0,
+            'time': 400
+        }
 
         while True:
             # Sfrutta il modello addestrato senza esplorazione
@@ -185,8 +193,11 @@ def agent_testing(num_episodes, mario_agent, enviroment):
             # del modello addestrato, non esplorare nuove azioni.
             show_state(enviroment, i_episode)
             action = np.argmax(mario_agent.get_qval(state))
-            next_obs, reward, terminal, _ = enviroment.step(action)
-            episode_reward += reward
+            next_obs, _, terminal, info = enviroment.step(action)
+
+            custom_reward, tmp_info = custom_rewards(info, tmp_info)
+
+            episode_reward += custom_reward
 
             next_state = mario_agent.obs_to_state(next_obs)
             state = next_state
@@ -198,14 +209,14 @@ def agent_testing(num_episodes, mario_agent, enviroment):
         print(f"Total reward after testing episode {i_episode + 1} is {episode_reward}")
 
     pygame.quit()
-    average_reward = np.mean(total_rewards)
-    print(f"Average reward over {num_episodes} testing episodes: {average_reward}")
 
 
 if __name__ == "__main__":
     env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
     env = make_env(env)  # Wraps the environment so that frames are grayscale
     obs = env.reset()
+
+    agent_mario = MarioQLAgent(env)
 
     # Imposta a True se vuoi utilizzare un agente già addestrato
     use_trained_agent = False
@@ -215,21 +226,21 @@ if __name__ == "__main__":
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("model_1/agent_mario-sampleModel.pkl"), 'rb') as f:
-            agent_mario = pickle.load(f)
+        with open(os.path.abspath("model_1/model.pkl"), 'rb') as f:
+            trained_q_values = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("model_1/rewards-sampleModel.npy"))
+        rewards = np.load(os.path.abspath("model_1/rewards.npy"))
+        agent_mario.state_a_dict = trained_q_values
 
         if training:
-            agent_training(num_episodes=4950, total_rewards=rewards, mario_agent=agent_mario, enviroment=env)
+            agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=agent_mario, enviroment=env)
         agent_testing(num_episodes=5, mario_agent=agent_mario, enviroment=env)
 
     else:
-        Mario = MarioQLAgent(env)
         if training:
             rewards = []
-            agent_training(num_episodes=4950, total_rewards=rewards, mario_agent=Mario, enviroment=env)
-        agent_testing(num_episodes=5, mario_agent=Mario, enviroment=env)
+            agent_training(num_episodes=5000, total_rewards=rewards, mario_agent=agent_mario, enviroment=env)
+        agent_testing(num_episodes=1, mario_agent=agent_mario, enviroment=env)
 
     # Plotting graph
     rewards = np.load(os.path.abspath("model_1/rewards.npy"))

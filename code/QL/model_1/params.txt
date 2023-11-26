@@ -6,17 +6,14 @@ CUSTOM_REWARDS = {
     "flower": 25.,  # mario eats a flower
     "mushroom_hit": -10.,  # mario gets hit while big
     "flower_hit": -15.,  # mario gets hit while fire mario
-    "coin": 50.0,  # mario gets a coin
+    "coin": 15.,  # mario gets a coin
+    "score": 15.,  # mario hit enemies
     "victory": 1000  # mario win
 }
 
-"mushroom_hit" e "flower_hit" non sono stati usati
+episodi = 3181
 
-episodi = 100
+RIGHT_ONLY
 
-SIMPLE_MOVEMENTS
-
-parametri modello = self.gamma = 0.90
+parametri modello = self.gamma = 0.99
                     self.alpha = 0.01
-                    self.explore_decay = 0.99
-                    self.explore_min = 0.02

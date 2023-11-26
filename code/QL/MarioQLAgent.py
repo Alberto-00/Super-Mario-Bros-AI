@@ -19,8 +19,6 @@ class MarioQLAgent:
         self.obs_vec = []
         self.gamma = 0.99  # si può modificare
         self.alpha = 0.01  # si può modificare
-        self.explore_decay = 0.99  # si può modificare
-        self.explore_min = 0.02  # si può modificare
         self.env = env
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -53,25 +51,18 @@ class MarioQLAgent:
         esegue un'azione casuale (exploration). La probabilità di esplorazione exploreP diminuisce nel tempo, poiché
         viene moltiplicata per 0.99 ad ogni chiamata di take_action.
 
-        Quindi, in questo caso, la politica è una combinazione di esplorazione e sfruttamento, dove l'agente inizialmente
-        esplora di più (azioni casuali) e gradualmente si orienta verso l'exploitation (sfruttamento dei valori Q appresi).
+        Quindi, in questo caso, la politica è una combinazione di esplorazione e sfruttamento, dove l'agente
+        inizialmente esplora di più (azioni casuali) e gradualmente si orienta verso l'exploitation (sfruttamento dei
+        valori Q appresi).
         """
-        if np.random.rand() < self.exploreP:
-            # Exploration: choose a random action
-            action = self.env.action_space.sample()
+        q_a = self.get_qval(state)
+        if np.random.rand() > self.exploreP:
+            """ exploitation"""
+            action = np.argmax(q_a)
         else:
-            # Exploitation: choose action with the highest Q-value
-            q_values = self.state_a_dict[state]
-            max_q_value = np.max(q_values)
-
-            # Add some randomness to the selection among the best actions
-            best_actions = [a for a, q in enumerate(q_values) if q == max_q_value]
-            action = np.random.choice(best_actions)
-
-        # Decay exploration probability
-        self.exploreP *= self.explore_decay
-        self.exploreP = max(self.exploreP, int(self.explore_min))
-
+            """ exploration"""
+            action = self.env.action_space.sample()
+        self.exploreP *= 0.99
         return action
 
     def get_qval(self, state):
@@ -80,7 +71,7 @@ class MarioQLAgent:
         Se lo stato non è presente in state_a_dict, inizializza casualmente i valori Q.
         """
         if state not in self.state_a_dict:
-            self.state_a_dict[state] = np.random.rand(7, 1)
+            self.state_a_dict[state] = np.random.rand(5, 1)
         return self.state_a_dict[state]
 
     def update_qval(self, action, state, reward, next_state, terminal):
