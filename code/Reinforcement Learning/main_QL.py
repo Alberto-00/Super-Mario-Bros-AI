@@ -7,8 +7,8 @@ import pickle
 from gym_super_mario_bros.actions import RIGHT_ONLY
 import matplotlib.pyplot as plt
 
-from QL.enviroment import *
-from QL.MarioQLAgent import MarioQLAgent
+from utils.enviroment import *
+from utils.MarioQLAgent import MarioQLAgent
 from tqdm import tqdm
 import time
 
@@ -164,65 +164,12 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
             # Saving the reward array and agent every 10 episodes
             if i_episode % 10 == 0:
-                np.save(os.path.abspath("model_1/rewards.npy"), np.array(total_rewards))
-                with open(os.path.abspath("model_1/model.pkl"), 'wb') as file:
+                np.save(os.path.abspath("models/QL/rewards.npy"), np.array(total_rewards))
+                with open(os.path.abspath("models/QL/model.pkl"), 'wb') as file:
                     pickle.dump(agent_mario.state_a_dict, file)
 
                 print("\nRewards and model are saved.\n")
 
-def agent_training_sarsa(num_episodes, total_rewards, mario_agent, enviroment):
-    with tqdm(total=num_episodes, desc="Training Episodes") as progress_bar:
-        for i_episode in range(num_episodes):
-            observation = enviroment.reset()
-            state = mario_agent.obs_to_state(observation)
-            episode_reward = 0
-            tmp_info = {
-                'coins': 0, 'flag_get': False,
-                'life': 2, 'status': 'small',
-                'TimeLimit.truncated': True,
-                'x_pos': 40, 'score': 0,
-                'time': 400
-            }
-
-            action = mario_agent.take_action_sarsa(state, next_action=None)
-
-            while True:
-                next_obs, _, terminal, info = enviroment.step(action)
-
-                # Utilizza la funzione di ricompensa personalizzata
-                custom_reward, tmp_info = custom_rewards(info, tmp_info)
-
-                episode_reward += custom_reward
-                next_state = mario_agent.obs_to_state(next_obs)
-
-                # Seleziona l'azione successiva usando SARSA
-                next_action = mario_agent.take_action_sarsa(next_state, next_action=None)
-
-                # Aggiorna i valori Q utilizzando SARSA
-                mario_agent.update_qval(action, state, custom_reward, next_state, next_action, terminal)
-
-                state = next_state
-                action = next_action
-
-                if terminal:
-                    break
-
-            if isinstance(total_rewards, np.ndarray):
-                total_rewards = np.append(total_rewards, episode_reward)
-            else:
-                total_rewards.append(episode_reward)
-
-            progress_bar.update(1)
-            progress_bar.set_postfix({'Reward': episode_reward})
-
-            # Saving the reward array and agent every 10 episodes
-            if i_episode % 10 == 0:
-                np.save(os.path.abspath("model_1/rewards-sampleModel.npy"), np.array(total_rewards))
-
-                with open(os.path.abspath("model_1/agent_mario-sampleModel.pkl"), 'wb') as file:
-                    pickle.dump(mario_agent.state_a_dict, file)
-
-                print("\nModel and rewards are saved.\n")
 
 def agent_testing(num_episodes, mario_agent, enviroment):
     total_rewards = []
@@ -279,10 +226,10 @@ if __name__ == "__main__":
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("model_1/model.pkl"), 'rb') as f:
+        with open(os.path.abspath("models/QL/model.pkl"), 'rb') as f:
             trained_q_values = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("model_1/rewards.npy"))
+        rewards = np.load(os.path.abspath("models/QL/rewards.npy"))
         agent_mario.state_a_dict = trained_q_values
 
         if training:
@@ -296,7 +243,7 @@ if __name__ == "__main__":
         agent_testing(num_episodes=1, mario_agent=agent_mario, enviroment=env)
 
     # Plotting graph
-    rewards = np.load(os.path.abspath("model_1/rewards.npy"))
+    rewards = np.load(os.path.abspath("models/QL/rewards.npy"))
     plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
     plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
     plt.show()

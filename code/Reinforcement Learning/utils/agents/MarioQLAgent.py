@@ -74,7 +74,6 @@ class MarioQLAgent:
             self.state_a_dict[state] = np.random.rand(5, 1)
         return self.state_a_dict[state]
 
-
     def update_qval(self, action, state, reward, next_state, terminal):
         """
         Aggiorna i valori Q in base all'equazione di aggiornamento di Q-learning.
@@ -88,20 +87,6 @@ class MarioQLAgent:
 
         td_error = td_target - self.get_qval(state)[action]
         self.state_a_dict[state][action] += self.alpha * td_error
-
-    """def update_qval(self, action, state, reward, next_state, next_action, terminal):
-        if terminal:
-            td_target = reward
-        else:
-            td_target = reward + self.gamma * self.get_qval(next_state)[next_action]
-
-        td_error = td_target - self.get_qval(state)[action]
-        self.state_a_dict[state][action] += self.alpha * td_error"""
-
-
-
-
-
 
     def take_action_sarsa(self, state, next_action):
         """
@@ -130,9 +115,5 @@ class MarioQLAgent:
             else:
                 # If the state is not in the dictionary, choose a random action
                 action = self.env.action_space.sample()
-
-        # Decay exploration probability
-        self.exploreP *= self.explore_decay
-        self.exploreP = max(self.exploreP, self.explore_min)
 
         return action

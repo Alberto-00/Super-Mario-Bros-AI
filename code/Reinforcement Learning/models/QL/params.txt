@@ -15,5 +15,7 @@ episodi = 3181
 
 RIGHT_ONLY
 
+28 ore
+
 parametri modello = self.gamma = 0.99
                     self.alpha = 0.01

@@ -130,3 +130,11 @@ class BufferWrapper(gym.ObservationWrapper):
         self.buffer[:-1] = self.buffer[1:]
         self.buffer[-1] = observation
         return self.buffer
+
+
+class PixelNormalization(gym.ObservationWrapper):
+    """
+    Normalize pixel values in frame --> 0 to 1
+    """
+    def observation(self, obs):
+        return np.array(obs).astype(np.float32) / 255.0
