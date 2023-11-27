@@ -47,7 +47,12 @@ class DQNAgent:
         self.action_space = action_space
         self.double_dqn = double_dqn
         self.pretrained = pretrained
+
+
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        # Inizializza l'oggetto l1 come SmoothL1Loss per sarsa
+        self.l1 = nn.SmoothL1Loss().to(self.device)
 
         # Double DQN network
         if self.double_dqn:

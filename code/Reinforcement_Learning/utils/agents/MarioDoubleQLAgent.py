@@ -33,6 +33,10 @@ class DoubleQLAgent:
         else:
             """ exploration"""
             action = self.env.action_space.sample()
+
+        # Assicurati che l'azione sia all'interno del range valido (da 0 a 4)
+        action = np.clip(action, 0, 4)
+
         self.exploreP *= 0.99
         return action
 
@@ -57,3 +61,19 @@ class DoubleQLAgent:
 
     def copy(self):
         self.Q_target = self.state_a_dict.copy()
+
+    def sarsa_update(self, state, action, reward, next_state, next_action, terminal):
+        if terminal:
+            target = reward
+        else:
+            next_action_q_value = self.get_qval(next_state)[next_action]
+            target = reward + self.gamma * next_action_q_value
+
+        current_q_value = self.get_qval(state)[action]
+
+        # SARSA update
+        updated_q_value = current_q_value + self.alpha * (target - current_q_value)
+
+        # Update Q-values
+        self.state_a_dict[state][action] = updated_q_value
+

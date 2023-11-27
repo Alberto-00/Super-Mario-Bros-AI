@@ -7,8 +7,8 @@ import pickle
 from gym_super_mario_bros.actions import RIGHT_ONLY
 import matplotlib.pyplot as plt
 
-from utils.enviroment import *
-from utils.MarioQLAgent import MarioQLAgent
+from Reinforcement_Learning.utils.enviroment import *
+from Reinforcement_Learning.utils.agents.MarioQLAgent import MarioQLAgent
 from tqdm import tqdm
 import time
 
@@ -164,8 +164,8 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
             # Saving the reward array and agent every 10 episodes
             if i_episode % 10 == 0:
-                np.save(os.path.abspath("models/QL/rewards.npy"), np.array(total_rewards))
-                with open(os.path.abspath("models/QL/model.pkl"), 'wb') as file:
+                np.save(os.path.abspath("../models/QL/rewards.npy"), np.array(total_rewards))
+                with open(os.path.abspath("../models/QL/model.pkl"), 'wb') as file:
                     pickle.dump(agent_mario.state_a_dict, file)
 
                 print("\nRewards and model are saved.\n")
@@ -281,10 +281,10 @@ if __name__ == "__main__":
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
-        with open(os.path.abspath("models/QL/model.pkl"), 'rb') as f:
+        with open(os.path.abspath("../models/QL/model.pkl"), 'rb') as f:
             trained_q_values = pickle.load(f)
 
-        rewards = np.load(os.path.abspath("models/QL/rewards.npy"))
+        rewards = np.load(os.path.abspath("../models/QL/rewards.npy"))
         agent_mario.state_a_dict = trained_q_values
 
         if training:
@@ -298,7 +298,7 @@ if __name__ == "__main__":
         agent_testing(num_episodes=1, mario_agent=agent_mario, enviroment=env)
 
     # Plotting graph
-    rewards = np.load(os.path.abspath("models/QL/rewards.npy"))
+    rewards = np.load(os.path.abspath("../models/QL/rewards.npy"))
     plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
     plt.plot(np.convolve(rewards, np.ones((5,)) / 5, mode="valid").tolist())
     plt.show()
