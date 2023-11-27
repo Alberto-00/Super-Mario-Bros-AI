@@ -60,8 +60,8 @@ class DQNAgent:
             self.target_net = DQNSolver(state_space, action_space).to(self.device)
 
             if self.pretrained:
-                self.local_net.load_state_dict(torch.load("DQN1.pt", map_location=torch.device(self.device)))
-                self.target_net.load_state_dict(torch.load("DQN2.pt", map_location=torch.device(self.device)))
+                self.local_net.load_state_dict(torch.load("models/DDQL/DQN1.pt", map_location=torch.device(self.device)))
+                self.target_net.load_state_dict(torch.load("models/DDQL/DQN2.pt", map_location=torch.device(self.device)))
 
             self.optimizer = torch.optim.Adam(self.local_net.parameters(), lr=lr)
             self.copy = 5000  # Copy the local model weights into the target network every 5000 steps
@@ -71,20 +71,20 @@ class DQNAgent:
             self.dqn = DQNSolver(state_space, action_space).to(self.device)
 
             if self.pretrained:
-                self.dqn.load_state_dict(torch.load("DQN.pt", map_location=torch.device(self.device)))
+                self.dqn.load_state_dict(torch.load("models/DDQL/DQN.pt", map_location=torch.device(self.device)))
             self.optimizer = torch.optim.Adam(self.dqn.parameters(), lr=lr)
 
         # Create memory
         self.max_memory_size = max_memory_size
         if self.pretrained:
-            self.STATE_MEM = torch.load("STATE_MEM.pt")
-            self.ACTION_MEM = torch.load("ACTION_MEM.pt")
-            self.REWARD_MEM = torch.load("REWARD_MEM.pt")
-            self.STATE2_MEM = torch.load("STATE2_MEM.pt")
-            self.DONE_MEM = torch.load("DONE_MEM.pt")
-            with open("ending_position.pkl", 'rb') as f:
+            self.STATE_MEM = torch.load("models/DDQL/STATE_MEM.pt")
+            self.ACTION_MEM = torch.load("models/DDQL/ACTION_MEM.pt")
+            self.REWARD_MEM = torch.load("models/DDQL/REWARD_MEM.pt")
+            self.STATE2_MEM = torch.load("models/DDQL/STATE2_MEM.pt")
+            self.DONE_MEM = torch.load("models/DDQL/DONE_MEM.pt")
+            with open("models/DDQL/ending_position.pkl", 'rb') as f:
                 self.ending_position = pickle.load(f)
-            with open("num_in_queue.pkl", 'rb') as f:
+            with open("models/DDQL/num_in_queue.pkl", 'rb') as f:
                 self.num_in_queue = pickle.load(f)
         else:
             self.STATE_MEM = torch.zeros(max_memory_size, *self.state_space)
