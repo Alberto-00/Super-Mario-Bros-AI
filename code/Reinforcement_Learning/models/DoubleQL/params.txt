@@ -11,7 +11,7 @@ CUSTOM_REWARDS = {
     "victory": 1000  # mario win
 }
 
-episodi = 3181
+episodi = 1000
 
 RIGHT_ONLY
 
