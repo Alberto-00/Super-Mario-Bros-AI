@@ -123,16 +123,16 @@ class DoubleQLAgent:
             if ((obs == self.obs_vec[i]).all()):
                 state = i
                 break
-        if (state == -1):
+        if state == -1:
             state = len(self.obs_vec)
             self.obs_vec.append(obs)
         return state
 
     def take_action(self, state):
-        Q_a = self.get_Qval(state)
+        q_a = self.get_Qval(state)
         if np.random.rand() > self.exploreP:
             """ exploitation"""
-            action = np.argmax(Q_a)
+            action = np.argmax(q_a)
         else:
             """ exploration"""
             action = env.action_space.sample()
@@ -151,11 +151,11 @@ class DoubleQLAgent:
 
     def update_Qval(self, state, action, reward, next_state, terminal):
         if terminal:
-            TD_target = reward
+            td_target = reward
         else:
-            TD_target = reward + self.gamma * np.amax(self.get_Qtarget(next_state))
+            td_target = reward + self.gamma * np.amax(self.get_Qtarget(next_state))
 
-        td_error = TD_target - self.get_Qval(state)[action]
+        td_error = td_target - self.get_Qval(state)[action]
         self.state_a_dict[state][action] += self.alpha * td_error
 
     def copy(self):

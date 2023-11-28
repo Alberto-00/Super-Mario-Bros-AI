@@ -47,8 +47,6 @@ class DQNAgent:
         self.action_space = action_space
         self.double_dqn = double_dqn
         self.pretrained = pretrained
-
-
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         # Inizializza l'oggetto l1 come SmoothL1Loss per sarsa
@@ -60,8 +58,10 @@ class DQNAgent:
             self.target_net = DQNSolver(state_space, action_space).to(self.device)
 
             if self.pretrained:
-                self.local_net.load_state_dict(torch.load("models/DDQL/DQN1.pt", map_location=torch.device(self.device)))
-                self.target_net.load_state_dict(torch.load("models/DDQL/DQN2.pt", map_location=torch.device(self.device)))
+                self.local_net.load_state_dict(torch.load("models/DDQL/DQN1.pt",
+                                                          map_location=torch.device(self.device)))
+                self.target_net.load_state_dict(torch.load("models/DDQL/DQN2.pt",
+                                                           map_location=torch.device(self.device)))
 
             self.optimizer = torch.optim.Adam(self.local_net.parameters(), lr=lr)
             self.copy = 5000  # Copy the local model weights into the target network every 5000 steps

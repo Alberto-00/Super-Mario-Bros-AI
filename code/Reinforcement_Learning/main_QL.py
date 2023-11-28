@@ -45,7 +45,6 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
                 # Utilizza la funzione di ricompensa personalizzata
                 custom_reward, tmp_info = custom_rewards(info, tmp_info)
-
                 episode_reward += custom_reward
 
                 end_time = time.time()

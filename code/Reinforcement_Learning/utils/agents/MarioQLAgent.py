@@ -17,8 +17,8 @@ class MarioQLAgent:
         self.state_a_dict = {}
         self.exploreP = 1
         self.obs_vec = []
-        self.gamma = 0.99  # si può modificare
-        self.alpha = 0.01  # si può modificare
+        self.gamma = 0.99
+        self.alpha = 0.01
         self.env = env
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
