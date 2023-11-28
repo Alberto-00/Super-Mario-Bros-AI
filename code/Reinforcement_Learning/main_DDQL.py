@@ -79,8 +79,6 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max):
                 start_time = time.time()
 
             custom_reward, tmp_info = custom_rewards(info, tmp_info)
-
-            total_reward += custom_reward
             state_next = torch.Tensor([state_next])
             custom_reward = torch.tensor([custom_reward]).unsqueeze(0)
 
@@ -96,6 +94,8 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max):
                 agent.experience_replay()
 
             state = state_next
+            total_reward += custom_reward
+
             if terminal:
                 break
 
@@ -135,7 +135,7 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max):
 
 if __name__ == "__main__":
     # For training
-    run(training_mode=True, pretrained=False, double_dqn=True, num_episodes=3000, exploration_max=1)
+    run(training_mode=True, pretrained=True, double_dqn=True, num_episodes=5000, exploration_max=1)
 
     # For Testing
     # run(training_mode=False, pretrained=True, double_dqn=True, num_episodes=100, exploration_max=0.05)

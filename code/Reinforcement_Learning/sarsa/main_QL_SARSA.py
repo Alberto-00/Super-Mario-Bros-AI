@@ -45,7 +45,6 @@ def agent_training_sarsa(num_episodes, total_rewards, mario_agent, enviroment):
                     start_time = time.time()
 
                 custom_reward, tmp_info = custom_rewards(info, tmp_info)
-                episode_reward += custom_reward
 
                 end_time = time.time()
                 if end_time - start_time > 15:
@@ -59,6 +58,8 @@ def agent_training_sarsa(num_episodes, total_rewards, mario_agent, enviroment):
 
                 state = next_state
                 action = next_action
+
+                episode_reward += custom_reward
 
                 if terminal:
                     break

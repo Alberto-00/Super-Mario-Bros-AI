@@ -200,7 +200,6 @@ for i_episode in range(num_episodes):
             start_time = time.time()
 
         custom_reward, tmp_info = custom_rewards(info, tmp_info)
-        episode_reward += custom_reward
 
         end_time = time.time()
         if end_time - start_time > 15:
@@ -215,6 +214,8 @@ for i_episode in range(num_episodes):
 
         Mario.update_Qval(state, action, custom_reward, next_state, terminal)
         state = next_state
+
+        episode_reward += custom_reward
 
         if terminal:
             break

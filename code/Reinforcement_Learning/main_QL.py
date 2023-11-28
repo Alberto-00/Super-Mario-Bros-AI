@@ -45,7 +45,6 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
                 # Utilizza la funzione di ricompensa personalizzata
                 custom_reward, tmp_info = custom_rewards(info, tmp_info)
-                episode_reward += custom_reward
 
                 end_time = time.time()
                 if end_time - start_time > 15:
@@ -56,6 +55,8 @@ def agent_training(num_episodes, total_rewards, mario_agent, enviroment):
 
                 mario_agent.update_qval(action, state, custom_reward, next_state, terminal)
                 state = next_state
+
+                episode_reward += custom_reward
 
                 if terminal:
                     break
