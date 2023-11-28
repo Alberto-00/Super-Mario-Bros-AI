@@ -104,11 +104,12 @@ class BufferWrapper(gym.ObservationWrapper):
         return self.buffer
 
 
-class DoubleQLAgent:
+class DoubleSarsaAgent:
 
     def __init__(self):
         """ initializing the class"""
-        self.state_a_dict = {}
+        self.state_a_dict1 = {}
+        self.state_a_dict2 = {}
         self.Q_target = {}
         self.copy_steps = 10
         self.exploreP = 1
@@ -120,61 +121,55 @@ class DoubleQLAgent:
     def obs_to_state(self, obs):
         state = -1
         for i in range(len(self.obs_vec)):
-            if ((obs == self.obs_vec[i]).all()):
+            if np.array_equal(obs, self.obs_vec[i]):
                 state = i
                 break
-        if (state == -1):
+        if state == -1:
             state = len(self.obs_vec)
             self.obs_vec.append(obs)
         return state
 
     def take_action(self, state):
-        Q_a = self.get_Qval(state)
+        q_a = 0.5 * (self.get_Qval1(state) + self.get_Qval2(state))
         if np.random.rand() > self.exploreP:
             """ exploitation"""
-            action = np.argmax(Q_a)
+            action = np.argmax(q_a)
         else:
             """ exploration"""
             action = env.action_space.sample()
         self.exploreP *= 0.99
         return action
 
-    def get_Qval(self, state):
-        if state not in self.state_a_dict:
-            self.state_a_dict[state] = np.random.rand(5, 1)
-        return self.state_a_dict[state]
+    def get_Qval1(self, state):
+        if state not in self.state_a_dict1:
+            self.state_a_dict1[state] = np.random.rand(5, 1)
+        return self.state_a_dict1[state]
 
-    def get_Qtarget(self, state):
-        if state not in self.Q_target:
-            self.Q_target[state] = np.random.rand(5, 1)
-        return self.Q_target[state]
+    def get_Qval2(self, state):
+        if state not in self.state_a_dict2:
+            self.state_a_dict2[state] = np.random.rand(5, 1)
+        return self.state_a_dict2[state]
 
     def update_Qval(self, state, action, reward, next_state, terminal):
         if terminal:
-            TD_target = reward
+            td_target = reward
         else:
-            TD_target = reward + self.gamma * np.amax(self.get_Qtarget(next_state))
+            if np.random.rand() < 0.5:
+                next_action = np.argmax(self.get_Qval2(next_state))
+                td_target = reward + self.gamma * self.get_Qval1(next_state)[next_action]
+            else:
+                next_action = np.argmax(self.get_Qval1(next_state))
+                td_target = reward + self.gamma * self.get_Qval2(next_state)[next_action]
 
-        td_error = TD_target - self.get_Qval(state)[action]
-        self.state_a_dict[state][action] += self.alpha * td_error
-
-    def sarsa_update(self, state, action, reward, next_state, next_action, terminal):
-        if terminal:
-            target = reward
+        if np.random.rand() < 0.5:
+            td_error = td_target - self.get_Qval1(state)[action]
+            self.state_a_dict1[state][action] += self.alpha * td_error
         else:
-            next_action_q_value = self.get_Qval(next_state)[next_action]
-            target = reward + self.gamma * next_action_q_value
-
-        current_q_value = self.get_Qval(state)[action]
-
-        # SARSA update
-        updated_q_value = current_q_value + self.alpha * (target - current_q_value)
-
-        # Update Q-values
-        self.state_a_dict[state][action] = updated_q_value
+            td_error = td_target - self.get_Qval2(state)[action]
+            self.state_a_dict2[state][action] += self.alpha * td_error
 
     def copy(self):
-        self.Q_target = self.state_a_dict.copy()
+        self.Q_target = self.state_a_dict1.copy()
 
 
 def make_env(env):
@@ -190,8 +185,8 @@ env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 env = make_env(env)  # Wraps the environment so that frames are grayscale
 obs = env.reset()
 
-num_episodes = 3181
-Mario = DoubleQLAgent()
+num_episodes = 1000
+Mario = DoubleSarsaAgent()
 rewards = []
 num_steps = 0
 
@@ -209,33 +204,39 @@ for i_episode in range(num_episodes):
     start_time = time.time()
     while True:
         action = Mario.take_action(state)
-        next_obs, _, terminal, info = env.step(action)
+        next_state, _, terminal, info = env.step(action)
+
+        if info["x_pos"] != tmp_info["x_pos"]:
+            start_time = time.time()
 
         custom_reward, tmp_info = custom_rewards(info, tmp_info)
-        episode_reward += custom_reward
 
         end_time = time.time()
         if end_time - start_time > 15:
             custom_reward -= CUSTOM_REWARDS["death"]
             terminal = True
 
-        next_state = Mario.obs_to_state(next_obs)
-        next_action = Mario.take_action(next_state)  # Aggiunta: scegli l'azione successiva usando la policy corrente
+        next_state = Mario.obs_to_state(next_state)
+        next_action = Mario.take_action(next_state)
 
-        Mario.sarsa_update(state, action, custom_reward, next_state, next_action, terminal)
+        Mario.update_Qval(state, action, custom_reward, next_state, terminal)
         state = next_state
+
+        episode_reward += custom_reward
 
         if terminal:
             break
+
     rewards.append(episode_reward)
     print("Total reward after episode {} is {}".format(i_episode + 1, episode_reward))
 
     # Saving the reward array and Q-table every 10 episodes
     if i_episode % 10 == 0:
-        save_path = os.path.abspath("models/DoubleQL/")
-        os.makedirs(save_path, exist_ok=True)  # Crea la directory se non esiste
-        np.save(os.path.join(save_path, "rewards.npy"), np.array(rewards))
-        with open(os.path.join(save_path, "model.pkl"), 'wb') as file:
-            pickle.dump(Mario.state_a_dict, file)
+        np.save(os.path.abspath("models/DoubleQL/rewards.npy"), np.array(rewards))
+        with open('models/DoubleQL/model.pkl', 'wb') as file:
+            pickle.dump({
+                'state_dict1': Mario.state_a_dict1,
+                'state_dict2': Mario.state_a_dict2
+            }, file)
 
         print("\nRewards and model are saved.\n")
