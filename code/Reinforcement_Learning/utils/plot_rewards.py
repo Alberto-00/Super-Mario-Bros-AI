@@ -2,7 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-rewards = np.load(os.path.abspath("../models/QL/rewards.npy"))
-plt.title("Episodes trained vs. Average Rewards (per 5 eps)")
-plt.plot(rewards)
+path = "../models/QL/"
+rewards = np.load(os.path.abspath(path + "rewards.npy"))
+
+# Prendiamo solo le prime 1000 ricompense
+first_1000_rewards = rewards[:1000]
+
+# Calcoliamo la media delle prime 1000 ricompense
+average_rewards = np.mean(first_1000_rewards)
+
+# Visualizza il grafico delle prime 1000 ricompense
+plt.title("Episodes trained vs. Avarage Rewards (per 1000 eps)")
+plt.plot(np.convolve(first_1000_rewards, np.ones((100,))/100, mode="valid").tolist())
+plt.xlabel("Episodes")
+plt.ylabel("Avarage Rewards")
 plt.show()
