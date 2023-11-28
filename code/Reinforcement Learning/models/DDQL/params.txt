@@ -11,11 +11,10 @@ CUSTOM_REWARDS = {
     "victory": 1000  # mario win
 }
 
-episodi = 3181
+episodi = 3.000
 
 RIGHT_ONLY
 
-3 ore
 
 agent = DQNAgent(state_space=observation_space,
                      action_space=action_space,

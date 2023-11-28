@@ -37,11 +37,12 @@ def custom_rewards(name, tmp_info):
         reward += CUSTOM_REWARDS['time']
 
     # detect if finished
-    if tmp_info['flag_get'] != name['flag_get'] and name['flag_get']:
+    if name['x_pos'] > 3159 or (tmp_info['flag_get'] != name['flag_get'] and name['flag_get']):
+        print('Vittoria\n')
         reward += CUSTOM_REWARDS['victory']
 
     # detect deaths
-    if 'TimeLimit.truncated' in name:
+    if 'TimeLimit.truncated' in name and name['x_pos'] < 3159:
         reward += CUSTOM_REWARDS["death"]
 
     # detect extra lives

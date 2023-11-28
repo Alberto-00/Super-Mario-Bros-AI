@@ -1,4 +1,5 @@
 import gym_super_mario_bros
+import pygame
 from nes_py.wrappers import JoypadSpace
 from gym_super_mario_bros.actions import RIGHT_ONLY
 
@@ -47,8 +48,11 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max):
 
     total_rewards = []
     if training_mode and pretrained:
-        with open("/models/DDQL/total_rewards.pkl", 'rb') as f:
+        with open("models/DDQL/total_rewards.pkl", 'rb') as f:
             total_rewards = pickle.load(f)
+
+    if not training_mode:
+        init_pygame()
 
     for ep_num in tqdm(range(num_episodes)):
         state = enviroment.reset()
@@ -70,6 +74,10 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max):
             steps += 1
 
             state_next, _, terminal, info = enviroment.step(int(action[0]))
+
+            if info["x_pos"] != tmp_info["x_pos"]:
+                start_time = time.time()
+
             custom_reward, tmp_info = custom_rewards(info, tmp_info)
 
             total_reward += custom_reward
@@ -98,7 +106,10 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max):
                                                                        np.mean(total_rewards)))
         num_episodes += 1
         print(
-            "\nEpisode {} score = {}, average score = {}".format(ep_num + 1, total_rewards[-1], np.mean(total_rewards)))
+            "Episode {} score = {}, average score = {}".format(ep_num + 1, total_rewards[-1], np.mean(total_rewards)))
+
+    if not training_mode:
+        pygame.quit()
 
     # Save the trained memory so that we can continue from where we stop using 'pretrained' = True
     if training_mode:
@@ -124,7 +135,7 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max):
 
 if __name__ == "__main__":
     # For training
-    run(training_mode=True, pretrained=False, double_dqn=True, num_episodes=3181, exploration_max=1)
+    run(training_mode=True, pretrained=False, double_dqn=True, num_episodes=3000, exploration_max=1)
 
     # For Testing
-    run(training_mode=False, pretrained=True, double_dqn=True, num_episodes=1, exploration_max=0.05)
+    # run(training_mode=False, pretrained=True, double_dqn=True, num_episodes=100, exploration_max=0.05)
