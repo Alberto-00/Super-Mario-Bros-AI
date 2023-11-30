@@ -1,0 +1,27 @@
+CUSTOM_REWARDS = {
+    "time": -0.1,  # per second that passes by
+    "death": -100.,  # mario dies
+    "extra_life": 100.,  # mario gets an extra life, which includes getting 100th coin
+    "mushroom": 20.,  # mario eats a mushroom to become big
+    "flower": 25.,  # mario eats a flower
+    "mushroom_hit": -10.,  # mario gets hit while big
+    "flower_hit": -15.,  # mario gets hit while fire mario
+    "coin": 15.,  # mario gets a coin
+    "score": 15.,  # mario hit enemies
+    "victory": 1000  # mario win
+}
+
+episodi = 1000
+
+RIGHT_ONLY
+
+3 ore
+
+agent = DQNAgent(self.state_a_dict = {}
+                self.Q_target = {}
+                self.copy_steps = 10
+                self.exploreP = 1
+                self.env = env
+                self.obs_vec = []
+                self.gamma = 0.99
+                self.alpha = 0.01

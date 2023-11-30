@@ -224,8 +224,8 @@ for i_episode in range(num_episodes):
 
     # Saving the reward array and Q-table every 10 episodes
     if i_episode % 10 == 0:
-        np.save(os.path.abspath("models/DoubleQL/rewards.npy"), np.array(rewards))
-        with open(os.path.abspath("models/DoubleQL/model.pkl"), 'wb') as file:
+        np.save(os.path.abspath("models/DQL/rewards.npy"), np.array(rewards))
+        with open(os.path.abspath("models/DQL/model.pkl"), 'wb') as file:
             pickle.dump(Mario.state_a_dict, file)
 
         print("\nRewards and model are saved.\n")

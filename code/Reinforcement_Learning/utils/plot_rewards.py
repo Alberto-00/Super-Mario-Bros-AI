@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-path = "../models/DoubleQL/"
-path_sarsa = "../sarsa/models/QL/"
-rewards = np.load(os.path.abspath(path + "rewards.npy"))
+path = "../models/QL/"
+path_sarsa = "../sarsa/models/Double_Sarsa/"
+rewards = np.load(os.path.abspath(path_sarsa + "rewards.npy"))
 # rewards = np.load(os.path.abspath(path + "total_rewards.pkl"), allow_pickle=True)
 
 # Prendiamo solo le prime 1000 ricompense
