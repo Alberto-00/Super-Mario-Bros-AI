@@ -1,6 +1,7 @@
 code/.idea
 code/Reinforcement_Learning/__pycache__
 code/Reinforcement_Learning/utils/__pycache__
+code/Reinforcement_Learning/utils/agents/__pycache__
 code/Reinforcement_Learning/models/DDQN
 code/Reinforcement_Learning/models/DQN
 code/Reinforcement_Learning/sarsa/models/DDN_Sarsa
