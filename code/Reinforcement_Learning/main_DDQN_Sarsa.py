@@ -158,7 +158,7 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max, sa
 
 if __name__ == "__main__":
     # For training
-    run(training_mode=True, pretrained=False, double_dqn=False, num_episodes=1, exploration_max=1, sarsa=True)
+    run(training_mode=True, pretrained=False, double_dqn=False, num_episodes=1000, exploration_max=1, sarsa=True)
 
     # For Testing
     # run(training_mode=False, pretrained=True, double_dqn=True, num_episodes=100, exploration_max=0.05, sarsa=True)

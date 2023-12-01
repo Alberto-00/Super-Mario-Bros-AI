@@ -222,8 +222,7 @@ class DQNAgent:
             current = self.local_net(state).gather(1, action.long())
         else:
             # Il target di SARSA è Q*(S, A) <- r + γ Q(S', A')
-            next_action = self.act(state2)  # Azione selezionata dalla policy per lo stato successivo
-            next_action = next_action.to(self.device)
+            next_action = self.dqn(state2).argmax(1).unsqueeze(1)
             target = reward + torch.mul(self.gamma * self.dqn(state2).gather(1, next_action), 1 - done)
             current = self.dqn(state).gather(1, action.long())
 
