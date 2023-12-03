@@ -1,0 +1,2 @@
+ore = 13
+episodi = 10k
