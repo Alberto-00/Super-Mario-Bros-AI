@@ -1,4 +1,6 @@
 import pygame
+import imageio
+import os
 
 CUSTOM_REWARDS = {
     "time": -0.1,  # per second that passes by
@@ -91,3 +93,22 @@ def show_state(enviroment, ep=0, info=""):
     pygame.display.flip()
     pygame.display.set_caption(f"Episode: {ep} {info}")
     pygame.time.delay(50)  # Aggiungi un ritardo per rallentare la visualizzazione
+
+
+def generate_gif(image_folder, output_gif, file_extension='.png', fps=60):
+    images = []
+
+    # Ottieni solo i file con l'estensione specificata nella cartella delle immagini
+    for file in os.listdir(image_folder):
+        if file.endswith(file_extension):
+            img_path = os.path.join(image_folder, file)
+            images.append(imageio.imread(img_path))
+
+    imageio.mimsave(output_gif, images, fps=fps)
+
+
+def generate_images_mario(enviroment, ep, state):
+    image = enviroment.render(mode='rgb_array')
+
+    # Salva l'immagine con un nome univoco basato sull'episodio
+    imageio.imwrite(f"mario_image_episode_{ep}_{state}.png", image)

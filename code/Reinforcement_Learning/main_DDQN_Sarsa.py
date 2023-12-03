@@ -68,7 +68,10 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max, sa
             'time': 400
         }
         start_time = time.time()
+        # num_state = 0
         while True:
+            # generate_images_mario(enviroment, ep_num, num_state)
+            # num_state += 1
             if not training_mode:
                 show_state(enviroment, ep_num)
             action = agent.act(state)
@@ -118,47 +121,50 @@ def run(training_mode, pretrained, double_dqn, num_episodes, exploration_max, sa
 
     # Save the trained memory so that we can continue from where we stop using 'pretrained' = True
     if training_mode and not sarsa:
-        with open("models/DDQN/ending_position.pkl", "wb") as f:
+        with open("models/DQN/ending_position.pkl", "wb") as f:
             pickle.dump(agent.ending_position, f)
-        with open("models/DDQN/num_in_queue.pkl", "wb") as f:
+        with open("models/DQN/num_in_queue.pkl", "wb") as f:
             pickle.dump(agent.num_in_queue, f)
-        with open("models/DDQN/total_rewards.pkl", "wb") as f:
+        with open("models/DQN/total_rewards.pkl", "wb") as f:
             pickle.dump(total_rewards, f)
         if agent.double_dqn:
-            torch.save(agent.local_net.state_dict(), "models/DDQN/DQN1.pt")
-            torch.save(agent.target_net.state_dict(), "models/DDQN/DQN2.pt")
+            torch.save(agent.local_net.state_dict(), "models/DQN/DQN1.pt")
+            torch.save(agent.target_net.state_dict(), "models/DQN/DQN2.pt")
         else:
-            torch.save(agent.dqn.state_dict(), "models/DDQN/DQN.pt")
-        torch.save(agent.STATE_MEM, "models/DDQN/STATE_MEM.pt")
-        torch.save(agent.ACTION_MEM, "models/DDQN/ACTION_MEM.pt")
-        torch.save(agent.REWARD_MEM, "models/DDQN/REWARD_MEM.pt")
-        torch.save(agent.STATE2_MEM, "models/DDQN/STATE2_MEM.pt")
-        torch.save(agent.DONE_MEM, "models/DDQN/DONE_MEM.pt")
+            torch.save(agent.dqn.state_dict(), "models/DQN/DQN.pt")
+        torch.save(agent.STATE_MEM, "models/DDN/STATE_MEM.pt")
+        torch.save(agent.ACTION_MEM, "models/DDN/ACTION_MEM.pt")
+        torch.save(agent.REWARD_MEM, "models/DQN/REWARD_MEM.pt")
+        torch.save(agent.STATE2_MEM, "models/DQN/STATE2_MEM.pt")
+        torch.save(agent.DONE_MEM, "models/DQN/DONE_MEM.pt")
 
     elif training_mode and sarsa:
-        with open("sarsa/models/DN_Sarsa/ending_position.pkl", "wb") as f:
+        with open("sarsa/models/DDN_Sarsa/ending_position.pkl", "wb") as f:
             pickle.dump(agent.ending_position, f)
-        with open("sarsa/models/DN_Sarsa/num_in_queue.pkl", "wb") as f:
+        with open("sarsa/models/DDN_Sarsa/num_in_queue.pkl", "wb") as f:
             pickle.dump(agent.num_in_queue, f)
-        with open("sarsa/models/DN_Sarsa/total_rewards.pkl", "wb") as f:
+        with open("sarsa/models/DDN_Sarsa/total_rewards.pkl", "wb") as f:
             pickle.dump(total_rewards, f)
         if agent.double_dqn:
-            torch.save(agent.local_net.state_dict(), "sarsa/models/DN_Sarsa/DQN1.pt")
-            torch.save(agent.target_net.state_dict(), "sarsa/models/DN_Sarsa/DQN2.pt")
+            torch.save(agent.local_net.state_dict(), "sarsa/models/DDN_Sarsa/DQN1.pt")
+            torch.save(agent.target_net.state_dict(), "sarsa/models/DDN_Sarsa/DQN2.pt")
         else:
-            torch.save(agent.dqn.state_dict(), "sarsa/models/DN_Sarsa/DQN.pt")
-        torch.save(agent.STATE_MEM, "sarsa/models/DN_Sarsa/STATE_MEM.pt")
-        torch.save(agent.ACTION_MEM, "sarsa/models/DN_Sarsa/ACTION_MEM.pt")
-        torch.save(agent.REWARD_MEM, "sarsa/models/DN_Sarsa/REWARD_MEM.pt")
-        torch.save(agent.STATE2_MEM, "sarsa/models/DN_Sarsa/STATE2_MEM.pt")
-        torch.save(agent.DONE_MEM, "sarsa/models/DN_Sarsa/DONE_MEM.pt")
+            torch.save(agent.dqn.state_dict(), "sarsa/models/DDN_Sarsa/DQN.pt")
+        torch.save(agent.STATE_MEM, "sarsa/models/DDN_Sarsa/STATE_MEM.pt")
+        torch.save(agent.ACTION_MEM, "sarsa/models/DDN_Sarsa/ACTION_MEM.pt")
+        torch.save(agent.REWARD_MEM, "sarsa/models/DDN_Sarsa/REWARD_MEM.pt")
+        torch.save(agent.STATE2_MEM, "sarsa/models/DDN_Sarsa/STATE2_MEM.pt")
+        torch.save(agent.DONE_MEM, "sarsa/models/DDN_Sarsa/DONE_MEM.pt")
 
     enviroment.close()
 
 
 if __name__ == "__main__":
     # For training
-    run(training_mode=True, pretrained=False, double_dqn=False, num_episodes=1000, exploration_max=1, sarsa=True)
+    run(training_mode=True, pretrained=False, double_dqn=True, num_episodes=10000, exploration_max=1, sarsa=True)
 
     # For Testing
-    # run(training_mode=False, pretrained=True, double_dqn=True, num_episodes=100, exploration_max=0.05, sarsa=True)
+    run(training_mode=False, pretrained=True, double_dqn=True, num_episodes=20, exploration_max=0.05, sarsa=True)
+
+    # Generate Gif Image
+    # generate_gif(image_folder='img', output_gif='demo/ddn_sarsa_victory.gif', file_extension='.png', fps=15)

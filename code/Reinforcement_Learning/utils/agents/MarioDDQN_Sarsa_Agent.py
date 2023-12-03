@@ -57,14 +57,14 @@ class DQNAgent:
 
             if self.pretrained:
                 if not self.sarsa:
-                    self.local_net.load_state_dict(torch.load("models/DDQN/DQN1.pt",
+                    self.local_net.load_state_dict(torch.load("models/DQN/DQN1.pt",
                                                               map_location=torch.device(self.device)))
-                    self.target_net.load_state_dict(torch.load("models/DDQN/DQN2.pt",
+                    self.target_net.load_state_dict(torch.load("models/DQN/DQN2.pt",
                                                                map_location=torch.device(self.device)))
                 else:
-                    self.local_net.load_state_dict(torch.load("../../sarsa/models/DN_Sarsa/DQN1.pt",
+                    self.local_net.load_state_dict(torch.load("sarsa/models/DDN_Sarsa/DQN1.pt",
                                                               map_location=torch.device(self.device)))
-                    self.target_net.load_state_dict(torch.load("../../sarsa/models/DN_Sarsa/DQN2.pt",
+                    self.target_net.load_state_dict(torch.load("sarsa/models/DDN_Sarsa/DQN2.pt",
                                                                map_location=torch.device(self.device)))
 
             self.optimizer = torch.optim.Adam(self.local_net.parameters(), lr=lr)
@@ -76,33 +76,33 @@ class DQNAgent:
 
             if self.pretrained:
                 if not sarsa:
-                    self.dqn.load_state_dict(torch.load("../../sarsa/models/DN_Sarsa/DQN.pt", map_location=torch.device(self.device)))
+                    self.dqn.load_state_dict(torch.load("models/DQN/DQN.pt", map_location=torch.device(self.device)))
                 else:
-                    self.dqn.load_state_dict(torch.load("../../sarsa/models/DN_Sarsa/DQN.pt", map_location=torch.device(self.device)))
+                    self.dqn.load_state_dict(torch.load("sarsa/models/DDN_Sarsa/DQN.pt", map_location=torch.device(self.device)))
             self.optimizer = torch.optim.Adam(self.dqn.parameters(), lr=lr)
 
         # Create memory
         self.max_memory_size = max_memory_size
         if self.pretrained:
             if not sarsa:
-                self.STATE_MEM = torch.load("models/DDQN/STATE_MEM.pt")
-                self.ACTION_MEM = torch.load("models/DDQN/ACTION_MEM.pt")
-                self.REWARD_MEM = torch.load("models/DDQN/REWARD_MEM.pt")
-                self.STATE2_MEM = torch.load("models/DDQN/STATE2_MEM.pt")
-                self.DONE_MEM = torch.load("models/DDQN/DONE_MEM.pt")
-                with open("models/DDQN/ending_position.pkl", 'rb') as f:
+                self.STATE_MEM = torch.load("models/DQN/STATE_MEM.pt")
+                self.ACTION_MEM = torch.load("models/DQN/ACTION_MEM.pt")
+                self.REWARD_MEM = torch.load("models/DQN/REWARD_MEM.pt")
+                self.STATE2_MEM = torch.load("models/DQN/STATE2_MEM.pt")
+                self.DONE_MEM = torch.load("models/DQN/DONE_MEM.pt")
+                with open("models/DQN/ending_position.pkl", 'rb') as f:
                     self.ending_position = pickle.load(f)
-                with open("models/DDQN/num_in_queue.pkl", 'rb') as f:
+                with open("models/DQN/num_in_queue.pkl", 'rb') as f:
                     self.num_in_queue = pickle.load(f)
             else:
-                self.STATE_MEM = torch.load("../../sarsa/models/DN_Sarsa/STATE_MEM.pt")
-                self.ACTION_MEM = torch.load("../../sarsa/models/DN_Sarsa/ACTION_MEM.pt")
-                self.REWARD_MEM = torch.load("../../sarsa/models/DN_Sarsa/REWARD_MEM.pt")
-                self.STATE2_MEM = torch.load("../../sarsa/models/DN_Sarsa/STATE2_MEM.pt")
-                self.DONE_MEM = torch.load("../../sarsa/models/DN_Sarsa/DONE_MEM.pt")
-                with open("../../sarsa/models/DN_Sarsa/ending_position.pkl", 'rb') as f:
+                self.STATE_MEM = torch.load("sarsa/models/DDN_Sarsa/STATE_MEM.pt")
+                self.ACTION_MEM = torch.load("sarsa/models/DDN_Sarsa/ACTION_MEM.pt")
+                self.REWARD_MEM = torch.load("sarsa/models/DDN_Sarsa/REWARD_MEM.pt")
+                self.STATE2_MEM = torch.load("sarsa/models/DDN_Sarsa/STATE2_MEM.pt")
+                self.DONE_MEM = torch.load("sarsa/models/DDN_Sarsa/DONE_MEM.pt")
+                with open("sarsa/models/DDN_Sarsa/ending_position.pkl", 'rb') as f:
                     self.ending_position = pickle.load(f)
-                with open("../../sarsa/models/DN_Sarsa/num_in_queue.pkl", 'rb') as f:
+                with open("sarsa/models/DDN_Sarsa/num_in_queue.pkl", 'rb') as f:
                     self.num_in_queue = pickle.load(f)
         else:
             self.STATE_MEM = torch.zeros(max_memory_size, *self.state_space)
