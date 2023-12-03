@@ -49,6 +49,7 @@ Here are the results of all the models, specifically we make a comparison betwee
 |------------------|-------|------|------|
 | Training steps   | 10K   | 10K  | 10K  |
 | Episode score    | 1723  | 4100 | 4320 |
+| Agents           | DDN Sarsa  | DDN Sarsa | DDQN |
 | Completed level? | False | True | True |
 
 So, to get more results, we could implement the PPO agorithm in both QL and Sarsa algorithms and make further comparisons in order to figure out which algorithm is best for the super mario bros game.
