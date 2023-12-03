@@ -1,7 +1,7 @@
 # Super-Mario-Bros Reinforcement Learning: QL vs Sarsa
 The following project concerns the development of an intelligent agent for the famous game produced by Nintendo Super Mario Bros. More in detail: the goal of this project was to design, implement and train   an agent with the Q-learning reinforcement learning algorithm. Subsequently, the results of learning with the Q-learning algorithm were compared with the SARSA algorithm. In our case study, other types of    learning involving the double Q-learning algorithm, Deep Q-Network (DQN) and Double Deep Q-Network (DDQN). The reason why these different learnings are provided is for performance issues. For more information, read the <a href="https://github.com/AlessandroUnisa">report</a> written by us.
 
-The parameters and plots of the relevant QL models are located under `./models`, while the parameters and plots of the Sarsa models are located under `./sarsa/models`. 
+The parameters and plots of the relevant QL models are located under `./code/Reinforcement_Learning/models`, while the parameters and plots of the Sarsa models are located under `./code/Reinforcement_Learning/sarsa/models`. 
 
 ![world-1-1-n_stack=4](https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/demo/ddqn.gif)
 
