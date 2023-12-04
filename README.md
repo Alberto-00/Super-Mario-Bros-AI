@@ -18,7 +18,7 @@ The parameters and plots of the relevant QL models are located under `./code/Rei
 
 
 ## Gym Environment
-I used the [gym-super-mario-bros](https://github.com/Kautenja/gym-super-mario-bros) environment. The code can be found in `./code/Reinforcement_Learning/utils/enviroment.py`, where I do the setup of the environment. In `./code/Reinforcement_Learning/utils/setup_env.py` I assign custom values to the rewards so as to take as many power-ups as possible. Then the agents QL logic can be found in `./code/Reinforcement_Learning/utils/agents`, while models and Sarsa agents can be found in `./code/Reinforcement_Learning/sarsa`
+We used the [gym-super-mario-bros](https://github.com/Kautenja/gym-super-mario-bros) environment. The code can be found in `./code/Reinforcement_Learning/utils/enviroment.py`, where we do the setup of the environment. In `./code/Reinforcement_Learning/utils/setup_env.py` We assign custom values to the rewards so as to take as many power-ups as possible. Then the agents QL logic can be found in `./code/Reinforcement_Learning/utils/agents`, while models and Sarsa agents can be found in `./code/Reinforcement_Learning/sarsa`
 The custom rewards are:
 
 *	<i>time</i>: -0.1,  per second that passes
@@ -34,7 +34,7 @@ The custom rewards are:
 
 ## Training & Results
 
-I used the QL, Double QL, Deep QN, Double Deep QN agents together with their respective sarsa agents with epsilon-greedy policy. Each model was trained for 1000 steps and took about 3.5 hours to finish except for DDQN and DDN Sarsa that they was trained for 10.000 steps and took about 13.4 hours.
+We used the QL, Double QL, Deep QN, Double Deep QN agents together with their respective sarsa agents with epsilon-greedy policy. Each model was trained for 1000 steps and took about 3.5 hours to finish except for DDQN and DDN Sarsa that they was trained for 10.000 steps and took about 13.4 hours.
 
 Here are the results of all the models, specifically we make a comparison between the QL and Sarsa algorithms.
 
