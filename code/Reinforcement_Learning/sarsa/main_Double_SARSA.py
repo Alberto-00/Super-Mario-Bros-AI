@@ -169,7 +169,9 @@ class DoubleSarsaAgent:
             self.state_a_dict2[state][action] += self.alpha * td_error
 
     def copy(self):
-        self.Q_target = self.state_a_dict1.copy()
+        self.Q_target = {}
+        for state in self.state_a_dict1:
+            self.Q_target[state] = 0.5 * (self.state_a_dict1[state] + self.state_a_dict2[state])
 
 
 def make_env(env):
