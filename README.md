@@ -38,8 +38,8 @@ I used the QL, Double QL, Deep QN, Double Deep QN agents together with their res
 
 Here are the results of all the models, specifically we make a comparison between the QL and Sarsa algorithms.
 
-<img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/ql_vs_sarsa.png" width="300"> <img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/doubleQL_vs_doubleSarsa.png" width="300" >
-<img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/dqn_vs_dnSarsa.png" width="300" > <img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/ddqn_vs_ddnSarsa.png" width="300" >
+<img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/ql_vs_sarsa.png" width="400"> <img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/doubleQL_vs_doubleSarsa.png" width="400" >
+<img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/dqn_vs_dnSarsa.png" width="400" > <img src="https://github.com/Alberto-00/Super-Mario-Bros-AI/blob/main/grafici/ddqn_vs_ddnSarsa.png" width="400" >
 
 
 
