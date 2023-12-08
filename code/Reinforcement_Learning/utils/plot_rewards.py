@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-path_ql = "../models/DQL/"
-path_sarsa = "../sarsa/models/Double_Sarsa/"
+path_ql = "../models/QL/"
+path_sarsa = "../sarsa/models/Sarsa/"
 
 # Carica le ricompense dai file
 rewards_ql = np.load(os.path.abspath(path_ql + "rewards.npy"))
