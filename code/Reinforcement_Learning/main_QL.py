@@ -1,4 +1,3 @@
-import os
 import gym_super_mario_bros
 from nes_py.wrappers import JoypadSpace
 import pickle
@@ -126,10 +125,10 @@ if __name__ == "__main__":
     agent_mario = MarioQLAgent(env)
 
     # Imposta a True se vuoi utilizzare un agente già addestrato
-    use_trained_agent = False
+    use_trained_agent = True
 
     # Imposta a True se vuoi effettuare la fase di training
-    training = True
+    training = False
 
     if use_trained_agent:
         # Carica i valori Q appresi e le rewards durante l'addestramento
